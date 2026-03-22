@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "scheme": "vibetribe",
+    "userInterfaceStyle": "automatic",
+    "orientation": "default",
+    "web": {
+      "bundler": "metro"
+    },
+    "name": "vibetribe",
+    "slug": "vibetribe",
+    "plugins": ["expo-font"],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
