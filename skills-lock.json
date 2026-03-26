@@ -31,6 +31,11 @@
       "sourceType": "github",
       "computedHash": "d39e806942fe880347f161056729b588a3cb0f1796270eebf52633fe11cfdce1"
     },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "computedHash": "063a0e6448123cd359ad0044cc46b0e490cc7964d45ef4bb9fd842bd2ffbca67"
+    },
     "heroui-native": {
       "source": "heroui-inc/heroui",
       "sourceType": "github",
@@ -50,6 +55,16 @@
       "source": "neondatabase/agent-skills",
       "sourceType": "github",
       "computedHash": "391693eee67001639ab65474df185da3ea5cf9ee4b99badecfd64561113edbb4"
+    },
+    "react-native-reusables": {
+      "source": "hairyf/skills",
+      "sourceType": "github",
+      "computedHash": "f37d8d5a20779994c9e84d527521a3727a2968a57fa6d5485f281623e8ff5c31"
+    },
+    "shadcn-ui": {
+      "source": "google-labs-code/stitch-skills",
+      "sourceType": "github",
+      "computedHash": "dadbca54d35a33fe73e40018611af2179689305bf6da812ab2643987fefd9da3"
     },
     "turborepo": {
       "source": "vercel/turborepo",

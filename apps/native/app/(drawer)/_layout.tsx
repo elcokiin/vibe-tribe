@@ -1,29 +1,30 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { Drawer } from "expo-router/drawer";
-import { useThemeColor } from "heroui-native";
 import React, { useCallback } from "react";
 import { Pressable, Text } from "react-native";
 
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useAppTheme } from "@/contexts/app-theme-context";
+import { getThemeColors } from "@/lib/theme";
 
 function DrawerLayout() {
-  const themeColorForeground = useThemeColor("foreground");
-  const themeColorBackground = useThemeColor("background");
+  const { isDark } = useAppTheme();
+  const theme = getThemeColors(isDark);
 
   const renderThemeToggle = useCallback(() => <ThemeToggle />, []);
 
   return (
     <Drawer
       screenOptions={{
-        headerTintColor: themeColorForeground,
-        headerStyle: { backgroundColor: themeColorBackground },
+        headerTintColor: theme.foreground,
+        headerStyle: { backgroundColor: theme.background },
         headerTitleStyle: {
           fontWeight: "600",
-          color: themeColorForeground,
+          color: theme.foreground,
         },
         headerRight: renderThemeToggle,
-        drawerStyle: { backgroundColor: themeColorBackground },
+        drawerStyle: { backgroundColor: theme.background },
       }}
     >
       <Drawer.Screen
@@ -31,14 +32,10 @@ function DrawerLayout() {
         options={{
           headerTitle: "Home",
           drawerLabel: ({ color, focused }) => (
-            <Text style={{ color: focused ? color : themeColorForeground }}>Home</Text>
+            <Text style={{ color: focused ? color : theme.foreground }}>Home</Text>
           ),
           drawerIcon: ({ size, color, focused }) => (
-            <Ionicons
-              name="home-outline"
-              size={size}
-              color={focused ? color : themeColorForeground}
-            />
+            <Ionicons name="home-outline" size={size} color={focused ? color : theme.foreground} />
           ),
         }}
       />
@@ -47,19 +44,19 @@ function DrawerLayout() {
         options={{
           headerTitle: "Tabs",
           drawerLabel: ({ color, focused }) => (
-            <Text style={{ color: focused ? color : themeColorForeground }}>Tabs</Text>
+            <Text style={{ color: focused ? color : theme.foreground }}>Tabs</Text>
           ),
           drawerIcon: ({ size, color, focused }) => (
             <MaterialIcons
               name="border-bottom"
               size={size}
-              color={focused ? color : themeColorForeground}
+              color={focused ? color : theme.foreground}
             />
           ),
           headerRight: () => (
             <Link href="/modal" asChild>
               <Pressable className="mr-4">
-                <Ionicons name="add-outline" size={24} color={themeColorForeground} />
+                <Ionicons name="add-outline" size={24} color={theme.foreground} />
               </Pressable>
             </Link>
           ),
@@ -70,13 +67,13 @@ function DrawerLayout() {
         options={{
           headerTitle: "Todos",
           drawerLabel: ({ color, focused }) => (
-            <Text style={{ color: focused ? color : themeColorForeground }}>Todos</Text>
+            <Text style={{ color: focused ? color : theme.foreground }}>Todos</Text>
           ),
           drawerIcon: ({ size, color, focused }) => (
             <Ionicons
               name="checkbox-outline"
               size={size}
-              color={focused ? color : themeColorForeground}
+              color={focused ? color : theme.foreground}
             />
           ),
         }}

@@ -1,19 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import {
-  Button,
-  Checkbox,
-  Chip,
-  Spinner,
-  Surface,
-  Input,
-  TextField,
-  useThemeColor,
-} from "heroui-native";
 import { useState } from "react";
-import { View, Text, ScrollView, Alert } from "react-native";
+import { ActivityIndicator, Alert, ScrollView, Text, View } from "react-native";
 
 import { Container } from "@/components/container";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Text as UIText } from "@/components/ui/text";
+import { useAppTheme } from "@/contexts/app-theme-context";
+import { getThemeColors } from "@/lib/theme";
 import { orpc } from "@/utils/orpc";
 
 export default function TodosScreen() {
@@ -42,9 +40,8 @@ export default function TodosScreen() {
     }),
   );
 
-  const mutedColor = useThemeColor("muted");
-  const dangerColor = useThemeColor("danger");
-  const foregroundColor = useThemeColor("foreground");
+  const { isDark } = useAppTheme();
+  const theme = getThemeColors(isDark);
 
   const handleAddTodo = () => {
     if (newTodoText.trim()) {
@@ -78,19 +75,19 @@ export default function TodosScreen() {
           <View className="flex-row items-center justify-between">
             <Text className="text-2xl font-semibold text-foreground tracking-tight">Tasks</Text>
             {totalCount > 0 && (
-              <Chip variant="secondary" color="accent" size="sm">
-                <Chip.Label>
+              <Badge variant="secondary">
+                <UIText>
                   {completedCount}/{totalCount}
-                </Chip.Label>
-              </Chip>
+                </UIText>
+              </Badge>
             )}
           </View>
         </View>
 
-        <Surface variant="secondary" className="mb-4 p-3 rounded-lg">
-          <View className="flex-row items-center gap-2">
-            <View className="flex-1">
-              <TextField>
+        <Card className="mb-4 p-3 rounded-lg bg-secondary border-secondary">
+          <CardContent className="p-0">
+            <View className="flex-row items-center gap-2">
+              <View className="flex-1">
                 <Input
                   value={newTodoText}
                   onChangeText={setNewTodoText}
@@ -99,71 +96,73 @@ export default function TodosScreen() {
                   onSubmitEditing={handleAddTodo}
                   returnKeyType="done"
                 />
-              </TextField>
+              </View>
+              <Button
+                variant={createMutation.isPending || !newTodoText.trim() ? "secondary" : "default"}
+                disabled={createMutation.isPending || !newTodoText.trim()}
+                onPress={handleAddTodo}
+                size="sm"
+                className="px-3"
+              >
+                {createMutation.isPending ? (
+                  <ActivityIndicator size="small" color="#ffffff" />
+                ) : (
+                  <Ionicons
+                    name="add"
+                    size={20}
+                    color={createMutation.isPending || !newTodoText.trim() ? theme.muted : theme.foreground}
+                  />
+                )}
+              </Button>
             </View>
-            <Button
-              isIconOnly
-              variant={createMutation.isPending || !newTodoText.trim() ? "secondary" : "primary"}
-              isDisabled={createMutation.isPending || !newTodoText.trim()}
-              onPress={handleAddTodo}
-              size="sm"
-            >
-              {createMutation.isPending ? (
-                <Spinner size="sm" color="default" />
-              ) : (
-                <Ionicons
-                  name="add"
-                  size={20}
-                  color={
-                    createMutation.isPending || !newTodoText.trim() ? mutedColor : foregroundColor
-                  }
-                />
-              )}
-            </Button>
-          </View>
-        </Surface>
+          </CardContent>
+        </Card>
 
         {isLoading && (
           <View className="items-center justify-center py-12">
-            <Spinner size="lg" />
-            <Text className="text-muted text-sm mt-3">Loading tasks...</Text>
+            <ActivityIndicator size="large" color={theme.foreground} />
+            <Text className="text-muted-foreground text-sm mt-3">Loading tasks...</Text>
           </View>
         )}
 
         {todos?.data && todos.data.length === 0 && !isLoading && (
-          <Surface variant="secondary" className="items-center justify-center py-10 rounded-lg">
-            <Ionicons name="checkbox-outline" size={40} color={mutedColor} />
-            <Text className="text-foreground font-medium mt-3">No tasks yet</Text>
-            <Text className="text-muted text-xs mt-1">Add your first task to get started</Text>
-          </Surface>
+          <Card className="items-center justify-center py-10 rounded-lg bg-secondary border-secondary">
+            <CardContent className="items-center justify-center p-0">
+              <Ionicons name="checkbox-outline" size={40} color={theme.muted} />
+              <Text className="text-foreground font-medium mt-3">No tasks yet</Text>
+              <Text className="text-muted-foreground text-xs mt-1">Add your first task to get started</Text>
+            </CardContent>
+          </Card>
         )}
 
         {todos?.data && todos.data.length > 0 && (
           <View className="gap-2">
             {todos.data.map((todo) => (
-              <Surface key={todo.id} variant="secondary" className="p-3 rounded-lg">
-                <View className="flex-row items-center gap-3">
-                  <Checkbox
-                    isSelected={todo.completed}
-                    onSelectedChange={() => handleToggleTodo(todo.id, todo.completed)}
-                  />
-                  <View className="flex-1">
-                    <Text
-                      className={`text-sm ${todo.completed ? "text-muted line-through" : "text-foreground"}`}
+              <Card key={todo.id} className="p-3 rounded-lg bg-secondary border-secondary">
+                <CardContent className="p-0">
+                  <View className="flex-row items-center gap-3">
+                    <Checkbox
+                      checked={todo.completed}
+                      onCheckedChange={() => handleToggleTodo(todo.id, todo.completed)}
+                    />
+                    <View className="flex-1">
+                      <Text
+                        className={`text-sm ${todo.completed ? "text-muted-foreground line-through" : "text-foreground"}`}
+                      >
+                        {todo.text}
+                      </Text>
+                    </View>
+                    <Button
+                      variant="ghost"
+                      onPress={() => handleDeleteTodo(todo.id)}
+                      size="sm"
+                      className="px-2"
                     >
-                      {todo.text}
-                    </Text>
+                      <Ionicons name="trash-outline" size={16} color={theme.danger} />
+                    </Button>
                   </View>
-                  <Button
-                    isIconOnly
-                    variant="ghost"
-                    onPress={() => handleDeleteTodo(todo.id)}
-                    size="sm"
-                  >
-                    <Ionicons name="trash-outline" size={16} color={dangerColor} />
-                  </Button>
-                </View>
-              </Surface>
+                </CardContent>
+              </Card>
             ))}
           </View>
         )}
