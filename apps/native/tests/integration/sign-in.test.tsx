@@ -4,7 +4,7 @@ import SignInScreen from "@/app/sign-in";
 import { SignIn } from "@/components/sign-in";
 import { renderWithProviders } from "@/tests/render-with-providers";
 
-const { mockUseSession, mockSignInEmail } = require("@/tests/mocks/auth-client");
+const { mockUseSession, mockSignInEmail, mockSignInSocial } = require("@/tests/mocks/auth-client");
 const { mockRefetchQueries } = require("@/tests/mocks/orpc");
 
 describe("sign-in", () => {
@@ -54,6 +54,34 @@ describe("sign-in", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Correo o contraseña incorrectos.")).toBeOnTheScreen();
+    });
+  });
+
+  it("starts Google OAuth flow from button", async () => {
+    renderWithProviders(<SignIn />);
+
+    fireEvent.press(screen.getByText("Continuar con Google"));
+
+    await waitFor(() => {
+      expect(mockSignInSocial).toHaveBeenCalledTimes(1);
+      expect(mockSignInSocial).toHaveBeenCalledWith(
+        { provider: "google" },
+        expect.objectContaining({ onError: expect.any(Function) }),
+      );
+    });
+  });
+
+  it("shows mapped error when Google sign in fails", async () => {
+    mockSignInSocial.mockImplementation(async (_payload, handlers) => {
+      handlers.onError?.({ message: "Network request failed" });
+    });
+
+    renderWithProviders(<SignIn />);
+
+    fireEvent.press(screen.getByText("Continuar con Google"));
+
+    await waitFor(() => {
+      expect(screen.getByText("No pudimos conectarnos. Revisa tu conexion e intenta de nuevo.")).toBeOnTheScreen();
     });
   });
 

@@ -19,6 +19,29 @@ const signInSchema = z.object({
 function SignIn() {
   const passwordInputRef = useRef<TextInput>(null);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setServerError(null);
+    setIsGoogleSubmitting(true);
+
+    try {
+      await authClient.signIn.social(
+        {
+          provider: "google",
+        },
+        {
+          onError(error) {
+            setServerError(
+              mapAuthErrorMessage(error, "No se pudo iniciar sesion con Google. Intenta de nuevo en un momento."),
+            );
+          },
+        },
+      );
+    } finally {
+      setIsGoogleSubmitting(false);
+    }
+  };
 
   const form = useForm({
     defaultValues: {
@@ -60,6 +83,8 @@ function SignIn() {
         })}
         >
           {({ isSubmitting, submissionAttempts }) => {
+            const isAnySubmitting = isSubmitting || isGoogleSubmitting;
+
             return (
               <>
                 {!!serverError && (
@@ -89,6 +114,7 @@ function SignIn() {
                           textContentType="emailAddress"
                           returnKeyType="next"
                           blurOnSubmit={false}
+                          editable={!isAnySubmitting}
                           className={getFieldError(field.state.meta.errors) ? "border-destructive" : undefined}
                           onSubmitEditing={() => {
                             passwordInputRef.current?.focus();
@@ -128,6 +154,7 @@ function SignIn() {
                           autoComplete="password"
                           textContentType="password"
                           returnKeyType="go"
+                          editable={!isAnySubmitting}
                           className={getFieldError(field.state.meta.errors) ? "border-destructive" : undefined}
                           onSubmitEditing={form.handleSubmit}
                         />
@@ -146,11 +173,19 @@ function SignIn() {
                     )}
                   </form.Field>
 
-                  <Button onPress={form.handleSubmit} disabled={isSubmitting} className="mt-1">
+                  <Button onPress={form.handleSubmit} disabled={isAnySubmitting} className="mt-1">
                     {isSubmitting ? (
                       <ActivityIndicator size="small" color="#ffffff" />
                     ) : (
                       <UIText>Iniciar Sesión</UIText>
+                    )}
+                  </Button>
+
+                  <Button onPress={handleGoogleSignIn} disabled={isAnySubmitting} variant="outline">
+                    {isGoogleSubmitting ? (
+                      <ActivityIndicator size="small" color="#ffffff" />
+                    ) : (
+                      <UIText>Continuar con Google</UIText>
                     )}
                   </Button>
                 </View>
