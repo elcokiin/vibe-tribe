@@ -25,13 +25,13 @@ describe("form-errors", () => {
 
   it("maps duplicate account errors", () => {
     expect(mapAuthErrorMessage({ message: "Email already exists" }, "fallback")).toBe(
-      "Este correo ya esta registrado.",
+      "Este correo ya está registrado.",
     );
   });
 
   it("maps network errors", () => {
     expect(mapAuthErrorMessage({ message: "Failed to fetch" }, "fallback")).toBe(
-      "No pudimos conectarnos. Revisa tu conexion e intenta de nuevo.",
+      "No pudimos conectarnos. Revisa tu conexión e intenta de nuevo.",
     );
   });
 });

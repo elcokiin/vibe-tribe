@@ -56,7 +56,7 @@ describe("sign-up", () => {
     fireEvent.press(screen.getByText("Crear Cuenta"));
 
     await waitFor(() => {
-      expect(screen.getByText("Este correo ya esta registrado.")).toBeOnTheScreen();
+      expect(screen.getByText("Este correo ya está registrado.")).toBeOnTheScreen();
     });
   });
 

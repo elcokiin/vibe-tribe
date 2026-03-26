@@ -81,7 +81,7 @@ describe("sign-in", () => {
     fireEvent.press(screen.getByText("Continuar con Google"));
 
     await waitFor(() => {
-      expect(screen.getByText("No pudimos conectarnos. Revisa tu conexion e intenta de nuevo.")).toBeOnTheScreen();
+      expect(screen.getByText("No pudimos conectarnos. Revisa tu conexión e intenta de nuevo.")).toBeOnTheScreen();
     });
   });
 
