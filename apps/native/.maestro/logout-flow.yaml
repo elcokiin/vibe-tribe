@@ -1,6 +1,39 @@
-appId: vibetribe
+appId: host.exp.exponent
 ---
-- launchApp
+- launchApp:
+    clearState: true
+- openLink: ${EXPO_URL}
+- runFlow:
+    when:
+      visible: "Development servers"
+    commands:
+      - tapOn: "exp://.*:8081"
+- runFlow:
+    when:
+      visible: "vibetribe"
+    commands:
+      - tapOn: "vibetribe"
+- runFlow:
+    when:
+      visible: "Continue"
+    commands:
+      - tapOn: "Continue"
+- runFlow:
+    when:
+      visible: "Go home"
+    commands:
+      - tapOn: "Go home"
+- extendedWaitUntil:
+    visible: "Bienvenido de nuevo"
+    timeout: 30000
+- tapOn: "correo@ejemplo.com"
+- inputText: "${E2E_EMAIL}"
+- tapOn: "••••••••"
+- inputText: "${E2E_PASSWORD}"
+- tapOn: "Iniciar Sesión"
 - assertVisible: "Home"
-- tapOn: "Sign Out"
+- tapOn: "Settings"
+- tapOn:
+    text: "Sign Out"
+    retryTapIfNoChange: true
 - assertVisible: "Bienvenido de nuevo"

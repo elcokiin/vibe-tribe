@@ -13,7 +13,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:e2e": "npx @maestro-ai/cli test .maestro"
+    "test:e2e": "PATH=\"$PATH:$HOME/.maestro/bin\" E2E_RUN_ID=${E2E_RUN_ID:-$(date +%s)} EXPO_URL=${EXPO_URL:-exp://10.0.2.2:8081} E2E_NAME=${E2E_NAME:-Test User} E2E_PASSWORD=${E2E_PASSWORD:-12345678} E2E_EMAIL=${E2E_EMAIL:-e2e+$E2E_RUN_ID@mail.com} E2E_SIGNUP_EMAIL=${E2E_SIGNUP_EMAIL:-e2e+signup+$E2E_RUN_ID@mail.com} maestro test .maestro"
   },
   "dependencies": {
     "@better-auth/expo": "catalog:",
@@ -39,6 +39,7 @@
     "dotenv": "catalog:",
     "expo": "^55.0.0",
     "expo-constants": "~55.0.7",
+    "expo-dev-client": "~55.0.18",
     "expo-font": "~55.0.4",
     "expo-haptics": "~55.0.8",
     "expo-linking": "~55.0.7",
