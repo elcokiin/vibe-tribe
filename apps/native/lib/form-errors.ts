@@ -71,7 +71,7 @@ export function mapAuthErrorMessage(error: unknown, fallbackMessage: string): st
     normalized.includes("duplicate") ||
     normalized.includes("taken")
   ) {
-    return "Este correo ya esta registrado.";
+    return "Este correo ya está registrado.";
   }
 
   if (
@@ -80,7 +80,7 @@ export function mapAuthErrorMessage(error: unknown, fallbackMessage: string): st
     normalized.includes("timeout") ||
     normalized.includes("failed to fetch")
   ) {
-    return "No pudimos conectarnos. Revisa tu conexion e intenta de nuevo.";
+    return "No pudimos conectarnos. Revisa tu conexión e intenta de nuevo.";
   }
 
   return rawMessage;

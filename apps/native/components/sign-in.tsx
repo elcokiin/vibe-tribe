@@ -31,11 +31,11 @@ function SignIn() {
           provider: "google",
         },
         {
-          onError(error) {
-            setServerError(
-              mapAuthErrorMessage(error, "No se pudo iniciar sesion con Google. Intenta de nuevo en un momento."),
-            );
-          },
+            onError(error) {
+              setServerError(
+                mapAuthErrorMessage(error, "No se pudo iniciar sesión con Google. Intenta de nuevo en un momento."),
+              );
+            },
         },
       );
     } finally {
@@ -62,7 +62,7 @@ function SignIn() {
         {
           onError(error) {
             setServerError(
-              mapAuthErrorMessage(error, "No se pudo iniciar sesion. Intenta de nuevo en un momento."),
+              mapAuthErrorMessage(error, "No se pudo iniciar sesión. Intenta de nuevo en un momento."),
             );
           },
           onSuccess() {

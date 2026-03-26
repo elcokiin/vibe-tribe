@@ -1,21 +1,14 @@
-import { Link, Redirect } from "expo-router";
+import { Link } from "expo-router";
 import { View } from "react-native";
 
 import { AppBackground } from "@/components/app-background";
 import { Container } from "@/components/container";
-import { SignIn } from "@/components/sign-in";
+import { ForgotPassword } from "@/components/forgot-password";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Text } from "@/components/ui/text";
-import { authClient } from "@/lib/auth-client";
 
-export default function SignInScreen() {
-  const { data: session, isPending } = authClient.useSession();
-
-  if (session?.user) {
-    return <Redirect href={"/home" as never} />;
-  }
-
+export default function ForgotPasswordScreen() {
   return (
     <AppBackground>
       <Container className="px-5 py-10">
@@ -26,22 +19,26 @@ export default function SignInScreen() {
         <View className="flex-1 justify-center">
           <Card className="border-border/60 bg-transparent shadow-none border-0">
             <CardHeader className="px-0">
-              <CardTitle className="text-2xl">Bienvenido de nuevo</CardTitle>
-              <Text className="text-muted-foreground">Inicia sesión para continuar a tu panel.</Text>
+              <CardTitle className="text-2xl">Olvidé mi contraseña</CardTitle>
+              <Text className="text-muted-foreground">
+                Te enviaremos un código de verificación para restablecerla.
+              </Text>
             </CardHeader>
+
             <CardContent className="gap-4 px-0">
-              {isPending ? <Text className="text-muted-foreground">Verificando sesión...</Text> : <SignIn />}
+              <ForgotPassword />
 
               <Text className="text-sm text-muted-foreground">
-                <Link href={"/forgot-password" as never} className="font-medium text-secondary">
-                  ¿Olvidaste tu contraseña?
+                ¿Ya tienes el código?{" "}
+                <Link href={"/reset-password" as never} className="font-medium text-secondary">
+                  Restablecer contraseña
                 </Link>
               </Text>
 
               <Text className="text-sm text-muted-foreground">
-                ¿No tienes una cuenta?{" "}
-                <Link href={"/sign-up" as never} className="font-medium text-secondary">
-                  Crea una
+                ¿Recordaste tu contraseña?{" "}
+                <Link href={"/sign-in" as never} className="font-medium text-secondary">
+                  Volver a iniciar sesión
                 </Link>
               </Text>
             </CardContent>
