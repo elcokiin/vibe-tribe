@@ -1,0 +1,6 @@
+appId: vibetribe
+---
+- launchApp
+- assertVisible: "Home"
+- tapOn: "Sign Out"
+- assertVisible: "Bienvenido de nuevo"

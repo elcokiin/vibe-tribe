@@ -1,50 +1,24 @@
 import { useForm } from "@tanstack/react-form";
-import { useRef } from "react";
-import { ActivityIndicator, Alert, Text, TextInput, View } from "react-native";
+import { useRef, useState } from "react";
+import { ActivityIndicator, TextInput, View } from "react-native";
 import z from "zod";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Text as UIText } from "@/components/ui/text";
 import { authClient } from "@/lib/auth-client";
+import { getFieldError, mapAuthErrorMessage } from "@/lib/form-errors";
 import { queryClient } from "@/utils/orpc";
 
 const signInSchema = z.object({
-  email: z.string().trim().min(1, "Email is required").email("Enter a valid email address"),
-  password: z.string().min(1, "Password is required").min(8, "Use at least 8 characters"),
+  email: z.string().trim().min(1, "El correo electrónico es requerido").email("Ingresa un correo electrónico válido"),
+  password: z.string().min(1, "La contraseña es requerida").min(8, "Usa al menos 8 caracteres"),
 });
-
-function getErrorMessage(error: unknown): string | null {
-  if (!error) return null;
-
-  if (typeof error === "string") {
-    return error;
-  }
-
-  if (Array.isArray(error)) {
-    for (const issue of error) {
-      const message = getErrorMessage(issue);
-      if (message) {
-        return message;
-      }
-    }
-    return null;
-  }
-
-  if (typeof error === "object" && error !== null) {
-    const maybeError = error as { message?: unknown };
-    if (typeof maybeError.message === "string") {
-      return maybeError.message;
-    }
-  }
-
-  return null;
-}
 
 function SignIn() {
   const passwordInputRef = useRef<TextInput>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const form = useForm({
     defaultValues: {
@@ -55,6 +29,8 @@ function SignIn() {
       onSubmit: signInSchema,
     },
     onSubmit: async ({ value, formApi }) => {
+      setServerError(null);
+
       await authClient.signIn.email(
         {
           email: value.email.trim(),
@@ -62,11 +38,12 @@ function SignIn() {
         },
         {
           onError(error) {
-            Alert.alert("Sign In Error", error.error?.message || "Failed to sign in");
+            setServerError(
+              mapAuthErrorMessage(error, "No se pudo iniciar sesion. Intenta de nuevo en un momento."),
+            );
           },
           onSuccess() {
             formApi.reset();
-            Alert.alert("Success", "Signed in successfully");
             queryClient.refetchQueries();
           },
         },
@@ -75,63 +52,96 @@ function SignIn() {
   });
 
   return (
-    <Card className="p-4 rounded-lg bg-secondary border-secondary">
-      <CardContent className="p-0">
-        <Text className="text-foreground font-medium mb-4">Sign In</Text>
-
-        <form.Subscribe
-          selector={(state) => ({
-            isSubmitting: state.isSubmitting,
-            validationError: getErrorMessage(state.errorMap.onSubmit),
-          })}
+    <View>
+      <form.Subscribe
+        selector={(state) => ({
+          isSubmitting: state.isSubmitting,
+          submissionAttempts: state.submissionAttempts,
+        })}
         >
-          {({ isSubmitting, validationError }) => {
-            const formError = validationError;
-
+          {({ isSubmitting, submissionAttempts }) => {
             return (
               <>
-                {!!formError && <Text className="mb-3 text-destructive text-sm">{formError}</Text>}
+                {!!serverError && (
+                  <View className="mb-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2">
+                    <UIText className="text-destructive text-sm">{serverError}</UIText>
+                  </View>
+                )}
 
                 <View className="gap-3">
                   <form.Field name="email">
                     {(field) => (
-                      <View className="gap-1.5">
-                        <Label>Email</Label>
+                      <View className="gap-1">
+                        <Label>Correo electrónico</Label>
                         <Input
                           value={field.state.value}
                           onBlur={field.handleBlur}
-                          onChangeText={field.handleChange}
-                          placeholder="email@example.com"
+                          onChangeText={(text) => {
+                            if (serverError) {
+                              setServerError(null);
+                            }
+                            field.handleChange(text);
+                          }}
+                          placeholder="correo@ejemplo.com"
                           keyboardType="email-address"
                           autoCapitalize="none"
                           autoComplete="email"
                           textContentType="emailAddress"
                           returnKeyType="next"
                           blurOnSubmit={false}
+                          className={getFieldError(field.state.meta.errors) ? "border-destructive" : undefined}
                           onSubmitEditing={() => {
                             passwordInputRef.current?.focus();
                           }}
                         />
+
+                        {(() => {
+                          const shouldShowFieldError = field.state.meta.isTouched || submissionAttempts > 0;
+                          const fieldError = getFieldError(field.state.meta.errors);
+
+                          if (!shouldShowFieldError || !fieldError) {
+                            return null;
+                          }
+
+                          return <UIText className="text-destructive text-xs">{fieldError}</UIText>;
+                        })()}
                       </View>
                     )}
                   </form.Field>
 
                   <form.Field name="password">
                     {(field) => (
-                      <View className="gap-1.5">
-                        <Label>Password</Label>
+                      <View className="gap-1">
+                        <Label>Contraseña</Label>
                         <Input
                           ref={passwordInputRef}
                           value={field.state.value}
                           onBlur={field.handleBlur}
-                          onChangeText={field.handleChange}
+                          onChangeText={(text) => {
+                            if (serverError) {
+                              setServerError(null);
+                            }
+                            field.handleChange(text);
+                          }}
                           placeholder="••••••••"
                           secureTextEntry
                           autoComplete="password"
                           textContentType="password"
                           returnKeyType="go"
+                          className={getFieldError(field.state.meta.errors) ? "border-destructive" : undefined}
                           onSubmitEditing={form.handleSubmit}
                         />
+
+                        {(() => {
+                          const shouldShowFieldError = field.state.meta.isTouched || submissionAttempts > 0;
+                          const fieldError = getFieldError(field.state.meta.errors);
+
+                          if (!shouldShowFieldError || !fieldError) {
+                            return null;
+                          }
+
+                          return <UIText className="text-destructive text-xs">{fieldError}</UIText>;
+                        })()}
                       </View>
                     )}
                   </form.Field>
@@ -140,7 +150,7 @@ function SignIn() {
                     {isSubmitting ? (
                       <ActivityIndicator size="small" color="#ffffff" />
                     ) : (
-                      <UIText>Sign In</UIText>
+                      <UIText>Iniciar Sesión</UIText>
                     )}
                   </Button>
                 </View>
@@ -148,8 +158,7 @@ function SignIn() {
             );
           }}
         </form.Subscribe>
-      </CardContent>
-    </Card>
+    </View>
   );
 }
 

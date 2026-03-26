@@ -1,0 +1,10 @@
+appId: vibetribe
+---
+- launchApp
+- assertVisible: "Bienvenido de nuevo"
+- tapOn: "correo@ejemplo.com"
+- inputText: "test@mail.com"
+- tapOn: "••••••••"
+- inputText: "12345678"
+- tapOn: "Iniciar Sesión"
+- assertVisible: "Home"

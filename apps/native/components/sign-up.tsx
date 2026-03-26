@@ -1,52 +1,26 @@
 import { useForm } from "@tanstack/react-form";
-import { useRef } from "react";
-import { ActivityIndicator, Alert, Text, TextInput, View } from "react-native";
+import { useRef, useState } from "react";
+import { ActivityIndicator, TextInput, View } from "react-native";
 import z from "zod";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Text as UIText } from "@/components/ui/text";
 import { authClient } from "@/lib/auth-client";
+import { getFieldError, mapAuthErrorMessage } from "@/lib/form-errors";
 import { queryClient } from "@/utils/orpc";
 
 const signUpSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").min(2, "Name must be at least 2 characters"),
-  email: z.string().trim().min(1, "Email is required").email("Enter a valid email address"),
-  password: z.string().min(1, "Password is required").min(8, "Use at least 8 characters"),
+  name: z.string().trim().min(1, "El nombre es requerido").min(2, "El nombre debe tener al menos 2 caracteres"),
+  email: z.string().trim().min(1, "El correo electrónico es requerido").email("Ingresa un correo electrónico válido"),
+  password: z.string().min(1, "La contraseña es requerida").min(8, "Usa al menos 8 caracteres"),
 });
-
-function getErrorMessage(error: unknown): string | null {
-  if (!error) return null;
-
-  if (typeof error === "string") {
-    return error;
-  }
-
-  if (Array.isArray(error)) {
-    for (const issue of error) {
-      const message = getErrorMessage(issue);
-      if (message) {
-        return message;
-      }
-    }
-    return null;
-  }
-
-  if (typeof error === "object" && error !== null) {
-    const maybeError = error as { message?: unknown };
-    if (typeof maybeError.message === "string") {
-      return maybeError.message;
-    }
-  }
-
-  return null;
-}
 
 export function SignUp() {
   const emailInputRef = useRef<TextInput>(null);
   const passwordInputRef = useRef<TextInput>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
 
   const form = useForm({
     defaultValues: {
@@ -58,6 +32,8 @@ export function SignUp() {
       onSubmit: signUpSchema,
     },
     onSubmit: async ({ value, formApi }) => {
+      setServerError(null);
+
       await authClient.signUp.email(
         {
           name: value.name.trim(),
@@ -66,11 +42,12 @@ export function SignUp() {
         },
         {
           onError(error) {
-            Alert.alert("Sign Up Error", error.error?.message || "Failed to sign up");
+            setServerError(
+              mapAuthErrorMessage(error, "No se pudo crear la cuenta. Intenta de nuevo en un momento."),
+            );
           },
           onSuccess() {
             formApi.reset();
-            Alert.alert("Success", "Account created successfully");
             queryClient.refetchQueries();
           },
         },
@@ -79,85 +56,135 @@ export function SignUp() {
   });
 
   return (
-    <Card className="p-4 rounded-lg bg-secondary border-secondary">
-      <CardContent className="p-0">
-        <Text className="text-foreground font-medium mb-4">Create Account</Text>
-
-        <form.Subscribe
-          selector={(state) => ({
-            isSubmitting: state.isSubmitting,
-            validationError: getErrorMessage(state.errorMap.onSubmit),
-          })}
+    <View>
+      <form.Subscribe
+        selector={(state) => ({
+          isSubmitting: state.isSubmitting,
+          submissionAttempts: state.submissionAttempts,
+        })}
         >
-          {({ isSubmitting, validationError }) => {
-            const formError = validationError;
-
+          {({ isSubmitting, submissionAttempts }) => {
             return (
               <>
-                {!!formError && <Text className="mb-3 text-destructive text-sm">{formError}</Text>}
+                {!!serverError && (
+                  <View className="mb-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2">
+                    <UIText className="text-destructive text-sm">{serverError}</UIText>
+                  </View>
+                )}
 
                 <View className="gap-3">
                   <form.Field name="name">
                     {(field) => (
-                      <View className="gap-1.5">
-                        <Label>Name</Label>
+                      <View className="gap-1">
+                        <Label>Nombre</Label>
                         <Input
                           value={field.state.value}
                           onBlur={field.handleBlur}
-                          onChangeText={field.handleChange}
-                          placeholder="John Doe"
+                          onChangeText={(text) => {
+                            if (serverError) {
+                              setServerError(null);
+                            }
+                            field.handleChange(text);
+                          }}
+                          placeholder="Juan Pérez"
                           autoComplete="name"
                           textContentType="name"
                           returnKeyType="next"
                           blurOnSubmit={false}
+                          className={getFieldError(field.state.meta.errors) ? "border-destructive" : undefined}
                           onSubmitEditing={() => {
                             emailInputRef.current?.focus();
                           }}
                         />
+
+                        {(() => {
+                          const shouldShowFieldError = field.state.meta.isTouched || submissionAttempts > 0;
+                          const fieldError = getFieldError(field.state.meta.errors);
+
+                          if (!shouldShowFieldError || !fieldError) {
+                            return null;
+                          }
+
+                          return <UIText className="text-destructive text-xs">{fieldError}</UIText>;
+                        })()}
                       </View>
                     )}
                   </form.Field>
 
                   <form.Field name="email">
                     {(field) => (
-                      <View className="gap-1.5">
-                        <Label>Email</Label>
+                      <View className="gap-1">
+                        <Label>Correo electrónico</Label>
                         <Input
                           ref={emailInputRef}
                           value={field.state.value}
                           onBlur={field.handleBlur}
-                          onChangeText={field.handleChange}
-                          placeholder="email@example.com"
+                          onChangeText={(text) => {
+                            if (serverError) {
+                              setServerError(null);
+                            }
+                            field.handleChange(text);
+                          }}
+                          placeholder="correo@ejemplo.com"
                           keyboardType="email-address"
                           autoCapitalize="none"
                           autoComplete="email"
                           textContentType="emailAddress"
                           returnKeyType="next"
                           blurOnSubmit={false}
+                          className={getFieldError(field.state.meta.errors) ? "border-destructive" : undefined}
                           onSubmitEditing={() => {
                             passwordInputRef.current?.focus();
                           }}
                         />
+
+                        {(() => {
+                          const shouldShowFieldError = field.state.meta.isTouched || submissionAttempts > 0;
+                          const fieldError = getFieldError(field.state.meta.errors);
+
+                          if (!shouldShowFieldError || !fieldError) {
+                            return null;
+                          }
+
+                          return <UIText className="text-destructive text-xs">{fieldError}</UIText>;
+                        })()}
                       </View>
                     )}
                   </form.Field>
 
                   <form.Field name="password">
                     {(field) => (
-                      <View className="gap-1.5">
-                        <Label>Password</Label>
+                      <View className="gap-1">
+                        <Label>Contraseña</Label>
                         <Input
                           ref={passwordInputRef}
                           value={field.state.value}
                           onBlur={field.handleBlur}
-                          onChangeText={field.handleChange}
+                          onChangeText={(text) => {
+                            if (serverError) {
+                              setServerError(null);
+                            }
+                            field.handleChange(text);
+                          }}
                           placeholder="••••••••"
                           secureTextEntry
                           autoComplete="new-password"
                           textContentType="newPassword"
                           returnKeyType="go"
+                          className={getFieldError(field.state.meta.errors) ? "border-destructive" : undefined}
                           onSubmitEditing={form.handleSubmit}
                         />
+
+                        {(() => {
+                          const shouldShowFieldError = field.state.meta.isTouched || submissionAttempts > 0;
+                          const fieldError = getFieldError(field.state.meta.errors);
+
+                          if (!shouldShowFieldError || !fieldError) {
+                            return null;
+                          }
+
+                          return <UIText className="text-destructive text-xs">{fieldError}</UIText>;
+                        })()}
                       </View>
                     )}
                   </form.Field>
@@ -166,7 +193,7 @@ export function SignUp() {
                     {isSubmitting ? (
                       <ActivityIndicator size="small" color="#ffffff" />
                     ) : (
-                      <UIText>Create Account</UIText>
+                      <UIText>Crear Cuenta</UIText>
                     )}
                   </Button>
                 </View>
@@ -174,7 +201,6 @@ export function SignUp() {
             );
           }}
         </form.Subscribe>
-      </CardContent>
-    </Card>
+    </View>
   );
 }

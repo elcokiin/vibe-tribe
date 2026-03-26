@@ -1,0 +1,13 @@
+appId: vibetribe
+---
+- launchApp
+- tapOn: "Crea una"
+- assertVisible: "Crea tu cuenta"
+- tapOn: "Juan Pérez"
+- inputText: "Juan Perez"
+- tapOn: "correo@ejemplo.com"
+- inputText: "nuevo@mail.com"
+- tapOn: "••••••••"
+- inputText: "12345678"
+- tapOn: "Crear Cuenta"
+- assertVisible: "Home"

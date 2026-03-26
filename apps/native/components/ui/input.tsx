@@ -1,10 +1,18 @@
 import { cn } from '@/lib/utils';
 import { Platform, TextInput, type TextInputProps } from 'react-native';
 
+import { useAppTheme } from '@/contexts/app-theme-context';
+import { THEME } from '@/lib/theme';
+
 function Input({
   className,
+  placeholderTextColor,
   ...props
 }: TextInputProps & React.RefAttributes<TextInput>) {
+  const { isDark } = useAppTheme();
+  // Se usa explícitamente el color muted del tema configurado en tu theme.ts
+  const defaultPlaceholderColor = isDark ? THEME.dark.muted : THEME.light.muted;
+
   return (
     <TextInput
       className={cn(
@@ -20,10 +28,12 @@ function Input({
             'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
             'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive'
           ),
-          native: 'placeholder:text-muted-foreground/50',
+          // En nativo eliminamos la clase `placeholder:` porque Tailwind a veces interfiere 
+          // con la propiedad explícita de `placeholderTextColor` que vamos a enviar
         }),
         className
       )}
+      placeholderTextColor={placeholderTextColor ?? defaultPlaceholderColor}
       {...props}
     />
   );
