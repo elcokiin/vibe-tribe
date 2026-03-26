@@ -7,11 +7,19 @@
       "bundler": "metro"
     },
     "name": "vibetribe",
-    "slug": "vibetribe",
-    "plugins": ["expo-font"],
+    "slug": "vibetribe-prod",
+    "plugins": [
+      "expo-font"
+    ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "f6418949-f1b9-4b5f-8aca-5dc52c668a74"
+      }
+    },
+    "owner": "vibetribe-org"
   }
 }
