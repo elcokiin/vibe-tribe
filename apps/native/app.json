@@ -20,6 +20,15 @@
         "projectId": "f6418949-f1b9-4b5f-8aca-5dc52c668a74"
       }
     },
-    "owner": "vibetribe-org"
+    "owner": "vibetribe-org",
+    "android": {
+      "package": "com.vibetribeorg.vibetribeprod"
+    },
+    "ios": {
+      "bundleIdentifier": "com.vibetribeorg.vibetribeprod",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
   }
 }
