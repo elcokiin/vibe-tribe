@@ -17,5 +17,4 @@ export const env = createEnv({
       .default("development"),
   },
   runtimeEnv: process.env,
-  emptyStringAsUndefined: true,
 });
