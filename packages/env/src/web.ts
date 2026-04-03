@@ -1,11 +1,11 @@
-import { createEnv } from "@t3-oss/env-core";
-import { z } from "zod";
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing env var: ${name}`);
+  }
+  return value;
+}
 
-export const env = createEnv({
-  clientPrefix: "PUBLIC_",
-  client: {
-    PUBLIC_SERVER_URL: z.string().url(),
-  },
-  runtimeEnv: (import.meta as any).env,
-  emptyStringAsUndefined: true,
-});
+export const env = {
+  PUBLIC_SERVER_URL: requireEnv("PUBLIC_SERVER_URL"),
+} as const;
