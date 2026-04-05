@@ -5,6 +5,7 @@ import z from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InputOTP } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
 import { Text as UIText } from "@/components/ui/text";
 import { authClient } from "@/lib/auth-client";
@@ -119,22 +120,19 @@ export function ResetPassword({ onSuccess }: ResetPasswordProps) {
                 {(field) => (
                   <View className="gap-1">
                     <Label>Código de verificación</Label>
-                    <Input
+                    <InputOTP
                       value={field.state.value}
                       onBlur={field.handleBlur}
                       onChangeText={(text) => {
                         if (serverError) {
                           setServerError(null);
                         }
-                        const sanitized = text.replace(/\D/g, "").slice(0, 6);
-                        field.handleChange(sanitized);
+                        field.handleChange(text);
                       }}
                       placeholder="123456"
-                      keyboardType="number-pad"
-                      autoCapitalize="none"
                       returnKeyType="next"
                       editable={!isSubmitting}
-                      className={getFieldError(field.state.meta.errors) ? "border-destructive" : undefined}
+                      invalid={!!getFieldError(field.state.meta.errors)}
                     />
 
                     {(() => {

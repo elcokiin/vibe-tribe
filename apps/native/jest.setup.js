@@ -46,6 +46,7 @@ jest.mock("expo-haptics", () => ({
 
 jest.mock("expo-router", () => ({
   Link: ({ children }) => children,
+  useLocalSearchParams: jest.fn(() => ({})),
   Redirect: ({ href }) => {
     const React = require("react");
     return React.createElement("Text", null, `REDIRECT:${href}`);

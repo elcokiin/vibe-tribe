@@ -16,10 +16,11 @@ import { queryClient, orpc } from "@/utils/orpc";
 
 export default function HomeScreen() {
   const { data: session, isPending: isSessionPending } = authClient.useSession();
+  const isEmailVerified = session?.user?.emailVerified === true;
   const healthCheck = useQuery(orpc.healthCheck.queryOptions());
   const isConnected = healthCheck.data === "OK";
 
-  if (!isSessionPending && !session?.user) {
+  if (!isSessionPending && (!session?.user || !isEmailVerified)) {
     return <Redirect href={"/sign-in" as never} />;
   }
 

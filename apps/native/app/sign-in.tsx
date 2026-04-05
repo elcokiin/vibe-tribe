@@ -11,9 +11,17 @@ import { authClient } from "@/lib/auth-client";
 
 export default function SignInScreen() {
   const { data: session, isPending } = authClient.useSession();
+  const isEmailVerified = session?.user?.emailVerified === true;
+  const verificationRedirectHref = session?.user?.email
+    ? (`/sign-up?mode=verify&email=${encodeURIComponent(session.user.email)}` as never)
+    : ("/sign-up?mode=verify" as never);
 
-  if (session?.user) {
+  if (session?.user && isEmailVerified) {
     return <Redirect href={"/home" as never} />;
+  }
+
+  if (session?.user && !isEmailVerified) {
+    return <Redirect href={verificationRedirectHref} />;
   }
 
   return (

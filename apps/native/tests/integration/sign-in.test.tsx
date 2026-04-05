@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
+import { useLocalSearchParams } from "expo-router";
 
 import SignInScreen from "@/app/sign-in";
 import { SignIn } from "@/components/sign-in";
@@ -7,9 +8,17 @@ import { renderWithProviders } from "@/tests/render-with-providers";
 const { mockUseSession, mockSignInEmail, mockSignInSocial } = require("@/tests/mocks/auth-client");
 const { mockRefetchQueries } = require("@/tests/mocks/orpc");
 
+const mockUseLocalSearchParams = useLocalSearchParams as jest.Mock;
+
+type AuthHandlers = {
+  onSuccess?: () => void;
+  onError?: (error: unknown) => void;
+};
+
 describe("sign-in", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseLocalSearchParams.mockReturnValue({});
     mockUseSession.mockReturnValue({ data: null, isPending: false });
   });
 
@@ -25,7 +34,7 @@ describe("sign-in", () => {
   });
 
   it("submits valid credentials and refetches queries", async () => {
-    mockSignInEmail.mockImplementation(async (_payload, handlers) => {
+    mockSignInEmail.mockImplementation(async (_payload: unknown, handlers: AuthHandlers) => {
       handlers.onSuccess?.();
     });
 
@@ -42,7 +51,7 @@ describe("sign-in", () => {
   });
 
   it("shows mapped error on failed sign in", async () => {
-    mockSignInEmail.mockImplementation(async (_payload, handlers) => {
+    mockSignInEmail.mockImplementation(async (_payload: unknown, handlers: AuthHandlers) => {
       handlers.onError?.({ message: "Invalid credentials" });
     });
 
@@ -72,7 +81,7 @@ describe("sign-in", () => {
   });
 
   it("shows mapped error when Google sign in fails", async () => {
-    mockSignInSocial.mockImplementation(async (_payload, handlers) => {
+    mockSignInSocial.mockImplementation(async (_payload: unknown, handlers: AuthHandlers) => {
       handlers.onError?.({ message: "Network request failed" });
     });
 
@@ -86,9 +95,23 @@ describe("sign-in", () => {
   });
 
   it("redirects authenticated users from screen", () => {
-    mockUseSession.mockReturnValue({ data: { user: { id: "1" } }, isPending: false });
+    mockUseSession.mockReturnValue({ data: { user: { id: "1", emailVerified: true } }, isPending: false });
     renderWithProviders(<SignInScreen />);
 
     expect(screen.queryByText("Iniciar Sesión")).not.toBeOnTheScreen();
+  });
+
+  it("redirects unverified users to sign-up screen", () => {
+    mockUseSession.mockReturnValue({ data: { user: { id: "1", emailVerified: false } }, isPending: false });
+    renderWithProviders(<SignInScreen />);
+
+    expect(screen.getByText("REDIRECT:/sign-up?mode=verify")).toBeOnTheScreen();
+  });
+
+  it("redirects unverified users to sign-up verify mode with encoded email", () => {
+    mockUseSession.mockReturnValue({ data: { user: { id: "1", email: "test+otp@mail.com", emailVerified: false } }, isPending: false });
+    renderWithProviders(<SignInScreen />);
+
+    expect(screen.getByText("REDIRECT:/sign-up?mode=verify&email=test%2Botp%40mail.com")).toBeOnTheScreen();
   });
 });
