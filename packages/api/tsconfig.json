@@ -1,0 +1,11 @@
+{
+  "extends": "@vibetribe/config/tsconfig.base.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "composite": true
+  }
+}
