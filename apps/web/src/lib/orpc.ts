@@ -1,6 +1,6 @@
 import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
-import type { AppRouterClient } from "@vibetribe/api/routers/index";
+import type { AppRouterClient } from "server/router";
 import { PUBLIC_SERVER_URL } from "astro:env/client";
 
 export const link = new RPCLink({

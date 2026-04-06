@@ -2,6 +2,9 @@
   "name": "server",
   "type": "module",
   "main": "src/index.ts",
+  "exports": {
+    "./router": "./src/router.ts"
+  },
   "scripts": {
     "build": "tsdown",
     "check-types": "tsc -b",
@@ -13,12 +16,12 @@
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
-    "@vibetribe/api": "workspace:*",
     "@vibetribe/auth": "workspace:*",
     "@vibetribe/db": "workspace:*",
     "@vibetribe/env": "workspace:*",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
+    "drizzle-orm": "catalog:",
     "hono": "catalog:",
     "zod": "catalog:"
   },

@@ -12,12 +12,12 @@
   "dependencies": {
     "@astrojs/node": "^10.0.0-beta.9",
     "@orpc/client": "catalog:",
-    "@vibetribe/api": "workspace:*",
     "@vibetribe/auth": "workspace:*",
     "@vibetribe/env": "workspace:*",
     "astro": "^6.0.1",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
+    "server": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {
