@@ -47,7 +47,7 @@ describe("home", () => {
   });
 
   it("shows live badge when health check succeeds", async () => {
-    mockUseSession.mockReturnValue({ data: { user: { id: "1" } }, isPending: false });
+    mockUseSession.mockReturnValue({ data: { user: { id: "1", emailVerified: true } }, isPending: false });
     renderHome();
 
     await waitFor(() => {
@@ -57,7 +57,7 @@ describe("home", () => {
   });
 
   it("shows offline state when health check fails", async () => {
-    mockUseSession.mockReturnValue({ data: { user: { id: "1" } }, isPending: false });
+    mockUseSession.mockReturnValue({ data: { user: { id: "1", emailVerified: true } }, isPending: false });
     mockHealthCheckQueryOptions.mockReturnValue({
       queryKey: ["healthCheck"],
       queryFn: async () => {
@@ -71,5 +71,12 @@ describe("home", () => {
       expect(screen.getByText("OFFLINE")).toBeOnTheScreen();
       expect(screen.getByText("Could not reach the API.")).toBeOnTheScreen();
     });
+  });
+
+  it("redirects unverified users to sign-in", () => {
+    mockUseSession.mockReturnValue({ data: { user: { id: "1", emailVerified: false } }, isPending: false });
+    renderHome();
+
+    expect(screen.getByText("REDIRECT:/sign-in")).toBeOnTheScreen();
   });
 });

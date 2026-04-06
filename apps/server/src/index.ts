@@ -3,13 +3,14 @@ import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { onError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
-import { createContext } from "@vibetribe/api/context";
-import { appRouter } from "@vibetribe/api/routers/index";
 import { auth } from "@vibetribe/auth";
 import { env } from "@vibetribe/env/server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+
+import { createContext } from "./context.js";
+import { appRouter } from "./router.js";
 
 const app = new Hono();
 
