@@ -3,7 +3,7 @@ import { todo } from "@vibetribe/db/schema/todo";
 import { eq } from "drizzle-orm";
 import z from "zod";
 
-import { publicProcedure } from "../procedure";
+import { publicProcedure } from "../procedure.js";
 
 export const todoRouter = {
   getAll: publicProcedure.handler(async () => {

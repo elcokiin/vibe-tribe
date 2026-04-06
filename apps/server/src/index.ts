@@ -9,8 +9,8 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
-import { createContext } from "./context";
-import { appRouter } from "./router";
+import { createContext } from "./context.js";
+import { appRouter } from "./router.js";
 
 const app = new Hono();
 
