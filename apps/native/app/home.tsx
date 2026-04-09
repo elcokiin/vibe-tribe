@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Redirect } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 import { Server, ShieldCheck, ShieldX } from "lucide-react-native";
 
@@ -15,6 +15,7 @@ import { authClient } from "@/lib/auth-client";
 import { queryClient, orpc } from "@/utils/orpc";
 
 export default function HomeScreen() {
+  const router = useRouter();
   const { data: session, isPending: isSessionPending } = authClient.useSession();
   const isEmailVerified = session?.user?.emailVerified === true;
   const healthCheck = useQuery(orpc.healthCheck.queryOptions());
@@ -35,7 +36,7 @@ export default function HomeScreen() {
           <ThemeToggle />
         </View>
 
-        <View className="flex-1 justify-center">
+        <View className="gap-5">
           <Card className="border-border/60 bg-card/95">
             <CardHeader>
               <View className="flex-row items-center justify-between">
@@ -50,6 +51,10 @@ export default function HomeScreen() {
               <CardDescription>Checks connectivity with your API server.</CardDescription>
             </CardHeader>
             <CardContent className="gap-4">
+              <Button variant="outline" onPress={() => router.push("/profile" as never)}>
+                <Text>Ir a mi perfil</Text>
+              </Button>
+
               {healthCheck.isLoading ? (
                 <View className="flex-row items-center gap-2">
                   <ActivityIndicator size="small" />

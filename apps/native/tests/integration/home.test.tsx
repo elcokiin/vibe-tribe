@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactElement } from "react";
 
@@ -6,7 +6,8 @@ import HomeScreen from "@/app/home";
 import { AppThemeProvider } from "@/contexts/app-theme-context";
 
 const { mockUseSession } = require("@/tests/mocks/auth-client");
-const { mockHealthCheckQueryOptions } = require("@/tests/mocks/orpc");
+const { mockHealthCheckQueryOptions, mockProfileGetMineQueryOptions } = require("@/tests/mocks/orpc");
+const { mockRouterPush } = require("@/tests/mocks/router");
 
 function renderHome() {
   const queryClient = new QueryClient({
@@ -36,6 +37,18 @@ describe("home", () => {
     mockHealthCheckQueryOptions.mockReturnValue({
       queryKey: ["healthCheck"],
       queryFn: async () => "OK",
+    });
+    mockProfileGetMineQueryOptions.mockReturnValue({
+      queryKey: ["profile", "getMine"],
+      queryFn: async () => ({
+        userId: "1",
+        name: "Test User",
+        email: "test@mail.com",
+        avatarUrl: null,
+        description: "Bio inicial",
+        favoriteDestinations: ["Cusco"],
+        updatedAt: new Date(),
+      }),
     });
   });
 
@@ -78,5 +91,17 @@ describe("home", () => {
     renderHome();
 
     expect(screen.getByText("REDIRECT:/sign-in")).toBeOnTheScreen();
+  });
+
+  it("navigates to dedicated profile page", async () => {
+    mockUseSession.mockReturnValue({ data: { user: { id: "1", emailVerified: true } }, isPending: false });
+
+    renderHome();
+
+    fireEvent.press(screen.getByText("Ir a mi perfil"));
+
+    await waitFor(() => {
+      expect(mockRouterPush).toHaveBeenCalledWith("/profile");
+    });
   });
 });
