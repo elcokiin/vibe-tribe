@@ -2,6 +2,7 @@ import { Link } from "expo-router";
 import { View } from "react-native";
 
 import { AppBackground } from "@/components/app-background";
+import { BrandHeader } from "@/components/brand-header";
 import { Container } from "@/components/container";
 import { ForgotPassword } from "@/components/forgot-password";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -18,6 +19,7 @@ export default function ForgotPasswordScreen() {
 
         <View className="flex-1 justify-center">
           <Card className="border-border/60 bg-transparent shadow-none border-0">
+            <BrandHeader className="mb-6" />
             <CardHeader className="px-0">
               <CardTitle className="text-2xl">Olvidé mi contraseña</CardTitle>
               <Text className="text-muted-foreground">

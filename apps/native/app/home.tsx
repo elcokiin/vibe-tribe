@@ -4,6 +4,7 @@ import { ActivityIndicator, View } from "react-native";
 import { Server, ShieldCheck, ShieldX } from "lucide-react-native";
 
 import { AppBackground } from "@/components/app-background";
+import { BrandHeader } from "@/components/brand-header";
 import { Container } from "@/components/container";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
@@ -29,8 +30,8 @@ export default function HomeScreen() {
     <AppBackground>
       <Container className="px-5 py-10">
         <View className="mb-6 flex-row items-center justify-between">
-          <View>
-            <Text className="text-2xl font-semibold">Home</Text>
+          <View className="flex-1 pr-3">
+            <BrandHeader compact showTagline={false} align="left" className="mb-2" />
             <Text className="text-muted-foreground">Protected route with backend health check.</Text>
           </View>
           <ThemeToggle />

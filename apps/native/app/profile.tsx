@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Image, View } from "react-native";
 
 import { AppBackground } from "@/components/app-background";
+import { BrandHeader } from "@/components/brand-header";
 import { Container } from "@/components/container";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -152,12 +153,15 @@ export default function ProfileScreen() {
   return (
     <AppBackground>
       <Container className="px-5 py-10">
-        <View className="mb-6 flex-row items-center justify-between">
-          <View>
+        <View className="mb-6 flex-row items-start justify-between">
+          <View className="flex-1 pr-3">
+            <BrandHeader compact showTagline={false} align="left" className="mb-2" />
             <Text className="text-2xl font-semibold">Mi Perfil</Text>
             <Text className="text-muted-foreground">Gestiona tu foto, descripcion y destinos favoritos.</Text>
           </View>
-          <ThemeToggle />
+          <View className="shrink-0">
+            <ThemeToggle />
+          </View>
         </View>
 
         <Card className="border-border/60 bg-card/95">
@@ -182,14 +186,21 @@ export default function ProfileScreen() {
                 </View>
               )}
 
-              <View className="flex-1 gap-1">
-                <Text className="text-base font-semibold">{profileName}</Text>
-                <Text className="text-muted-foreground text-sm">
+              <View className="min-w-0 flex-1 gap-1">
+                <Text className="text-base font-semibold" numberOfLines={1}>
+                  {profileName}
+                </Text>
+                <Text className="text-muted-foreground text-sm" numberOfLines={2}>
                   {profile.data?.email ?? session?.user?.email ?? "-"}
                 </Text>
               </View>
 
-              <Button variant="outline" onPress={onPickAvatar} disabled={updateProfile.isPending}>
+              <Button
+                variant="outline"
+                onPress={onPickAvatar}
+                disabled={updateProfile.isPending}
+                className="shrink-0"
+              >
                 <Text>{updateProfile.isPending ? "Guardando..." : "Cambiar foto"}</Text>
               </Button>
             </View>

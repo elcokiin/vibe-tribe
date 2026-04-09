@@ -3,13 +3,26 @@
     "scheme": "vibetribe",
     "userInterfaceStyle": "automatic",
     "orientation": "default",
+    "icon": "./assets/brand/logomark-1024x1024.png",
     "web": {
       "bundler": "metro"
     },
     "name": "vibetribe",
     "slug": "vibetribe-prod",
     "plugins": [
-      "expo-font"
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#a86b32",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 220,
+          "dark": {
+            "image": "./assets/images/splash-icon-dark.png",
+            "backgroundColor": "#1f140b"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
@@ -22,10 +35,17 @@
     },
     "owner": "vibetribe-org",
     "android": {
-      "package": "com.vibetribeorg.vibetribeprod"
+      "package": "com.vibetribeorg.vibetribeprod",
+      "icon": "./assets/brand/logomark-1024x1024.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/brand/logomark-1024x1024.png",
+        "backgroundColor": "#a86b32",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      }
     },
     "ios": {
       "bundleIdentifier": "com.vibetribeorg.vibetribeprod",
+      "icon": "./assets/brand/logomark-1024x1024.png",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
