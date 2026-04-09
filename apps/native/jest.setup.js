@@ -2,6 +2,7 @@ require("@testing-library/jest-native/extend-expect");
 require("react-native-gesture-handler/jestSetup");
 
 const { mockAuthClient } = require("./tests/mocks/auth-client");
+const { mockRouterPush, mockRouterBack } = require("./tests/mocks/router");
 
 const originalConsoleError = console.error;
 
@@ -47,9 +48,21 @@ jest.mock("expo-haptics", () => ({
 jest.mock("expo-router", () => ({
   Link: ({ children }) => children,
   useLocalSearchParams: jest.fn(() => ({})),
+  useRouter: () => ({
+    push: mockRouterPush,
+    back: mockRouterBack,
+  }),
   Redirect: ({ href }) => {
     const React = require("react");
     return React.createElement("Text", null, `REDIRECT:${href}`);
+  },
+}));
+
+jest.mock("expo-image-picker", () => ({
+  requestMediaLibraryPermissionsAsync: jest.fn(async () => ({ granted: true })),
+  launchImageLibraryAsync: jest.fn(async () => ({ canceled: true, assets: [] })),
+  MediaTypeOptions: {
+    Images: "Images",
   },
 }));
 

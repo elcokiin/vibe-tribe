@@ -20,6 +20,7 @@ function StackLayout() {
       <Stack.Screen name="forgot-password" />
       <Stack.Screen name="reset-password" />
       <Stack.Screen name="home" />
+      <Stack.Screen name="profile" />
     </Stack>
   );
 }
