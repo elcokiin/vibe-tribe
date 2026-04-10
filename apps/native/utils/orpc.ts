@@ -3,7 +3,7 @@ import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
 import type { AppRouterClient } from "server/router";
-import { env } from "@vibetribe/env/native";
+import { env } from "../../../packages/env/src/native";
 import { Platform } from "react-native";
 
 import { authClient } from "@/lib/auth-client";

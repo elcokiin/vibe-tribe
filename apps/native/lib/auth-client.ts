@@ -1,5 +1,5 @@
 import { expoClient } from "@better-auth/expo/client";
-import { env } from "@vibetribe/env/native";
+import { env } from "../../../packages/env/src/native";
 import { createAuthClient } from "better-auth/react";
 import { emailOTPClient } from "better-auth/client/plugins";
 import Constants from "expo-constants";
