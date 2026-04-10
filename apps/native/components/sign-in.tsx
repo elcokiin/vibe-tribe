@@ -29,6 +29,7 @@ function SignIn() {
       await authClient.signIn.social(
         {
           provider: "google",
+          callbackURL: "vibetribe://",
         },
         {
             onError(error) {

@@ -90,43 +90,49 @@ export default function ProfileScreen() {
 
   async function onPickAvatar() {
     setSaveError(null);
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    if (!permissionResult.granted) {
-      setSaveError("Necesitamos acceso a tus fotos para actualizar la imagen de perfil.");
-      return;
-    }
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.6,
-      base64: true,
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    });
+      if (!permissionResult.granted) {
+        setSaveError("Necesitamos acceso a tus fotos para actualizar la imagen de perfil.");
+        return;
+      }
 
-    if (result.canceled) {
-      return;
-    }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.6,
+        base64: true,
+        mediaTypes: ["images"],
+      });
 
-    const picked = result.assets[0];
+      if (result.canceled) {
+        return;
+      }
 
-    if (!picked?.base64) {
-      setSaveError("No pudimos procesar la imagen seleccionada. Intenta con otra foto.");
-      return;
-    }
+      const picked = result.assets[0];
 
-    const mimeType = picked.mimeType ?? "image/jpeg";
-    const avatarUrl = `data:${mimeType};base64,${picked.base64}`;
+      if (!picked?.base64) {
+        setSaveError("No pudimos procesar la imagen seleccionada. Intenta con otra foto.");
+        return;
+      }
 
-    updateProfile.mutate(
-      { avatarUrl },
-      {
-        onError() {
-          setSaveError("No pudimos actualizar la foto de perfil. Intenta de nuevo.");
+      const mimeType = picked.mimeType ?? "image/jpeg";
+      const avatarUrl = `data:${mimeType};base64,${picked.base64}`;
+
+      updateProfile.mutate(
+        { avatarUrl },
+        {
+          onError() {
+            setSaveError("No pudimos actualizar la foto de perfil. Intenta de nuevo.");
+          },
         },
-      },
-    );
+      );
+    } catch (error) {
+      console.error("[profile] image picker failed", error);
+      setSaveError("No pudimos abrir la galeria. Actualiza la app y vuelve a intentarlo.");
+    }
   }
 
   function onSaveProfile() {

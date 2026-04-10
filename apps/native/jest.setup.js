@@ -61,9 +61,6 @@ jest.mock("expo-router", () => ({
 jest.mock("expo-image-picker", () => ({
   requestMediaLibraryPermissionsAsync: jest.fn(async () => ({ granted: true })),
   launchImageLibraryAsync: jest.fn(async () => ({ canceled: true, assets: [] })),
-  MediaTypeOptions: {
-    Images: "Images",
-  },
 }));
 
 jest.mock("react-native-safe-area-context", () => ({
