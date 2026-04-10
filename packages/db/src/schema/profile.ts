@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 import { jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
-import { user } from "./auth";
+import { user } from "./auth.js";
 
 export const profile = pgTable("profile", {
   userId: text("user_id")
