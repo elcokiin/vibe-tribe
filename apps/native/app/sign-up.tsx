@@ -35,6 +35,10 @@ export default function SignUpScreen() {
     return <Redirect href={"/home" as never} />;
   }
 
+  if (!isPending && isVerifyModeFromParams && !session?.user) {
+    return <Redirect href={"/sign-in" as never} />;
+  }
+
   return (
     <AppBackground>
       <Container className="px-5 py-10">

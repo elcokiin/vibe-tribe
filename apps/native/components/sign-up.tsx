@@ -40,6 +40,7 @@ type SignUpProps = {
 };
 
 export function SignUp({ initialMode = "default", prefilledEmail, prefillMessage }: SignUpProps) {
+  const { data: session } = authClient.useSession();
   const emailInputRef = useRef<TextInput>(null);
   const passwordInputRef = useRef<TextInput>(null);
   const [serverError, setServerError] = useState<string | null>(null);
@@ -52,6 +53,7 @@ export function SignUp({ initialMode = "default", prefilledEmail, prefillMessage
     return null;
   });
   const [isResendingOtp, setIsResendingOtp] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const isVerifyOnlyMode = initialMode === "verify";
 
@@ -75,7 +77,7 @@ export function SignUp({ initialMode = "default", prefilledEmail, prefillMessage
   };
 
   useEffect(() => {
-    if (!isVerifyOnlyMode || !prefilledEmail?.trim()) {
+    if (!isVerifyOnlyMode || !prefilledEmail?.trim() || verificationData?.password !== null) {
       return;
     }
 
@@ -85,7 +87,7 @@ export function SignUp({ initialMode = "default", prefilledEmail, prefillMessage
       : "Te enviamos un código para verificar tu correo.";
 
     void sendVerificationOtp(prefilledEmail.trim(), verificationMessage);
-  }, [isVerifyOnlyMode, prefilledEmail, prefillMessage]);
+  }, [isVerifyOnlyMode, prefilledEmail, prefillMessage, verificationData]);
 
   const otpForm = useForm({
     defaultValues: {
@@ -109,6 +111,19 @@ export function SignUp({ initialMode = "default", prefilledEmail, prefillMessage
         },
         {
           async onSuccess() {
+            const activeSessionEmail = session?.user?.email?.trim().toLowerCase();
+            const verificationEmail = verificationData.email.trim().toLowerCase();
+            const alreadySignedIn = activeSessionEmail === verificationEmail;
+
+            if (alreadySignedIn) {
+              formApi.reset();
+              signUpForm.reset();
+              setVerificationData(null);
+              setSuccessMessage("Correo verificado. Redirigiendo...");
+              queryClient.refetchQueries();
+              return;
+            }
+
             if (verificationData.password) {
               await authClient.signIn.email(
                 {
@@ -118,8 +133,13 @@ export function SignUp({ initialMode = "default", prefilledEmail, prefillMessage
                 {
                   onError(error) {
                     setServerError(
-                      mapAuthErrorMessage(error, "El correo fue verificado, pero no se pudo iniciar sesión automáticamente."),
+                      mapAuthErrorMessage(error, "El correo fue verificado. Inicia sesión para continuar."),
                     );
+                    setSuccessMessage("Correo verificado. Ahora inicia sesión para continuar.");
+                    setVerificationData(null);
+                    formApi.reset();
+                    signUpForm.reset();
+                    queryClient.refetchQueries();
                   },
                   onSuccess() {
                     formApi.reset();
@@ -201,6 +221,24 @@ export function SignUp({ initialMode = "default", prefilledEmail, prefillMessage
     }
   };
 
+  const handleSignOut = async () => {
+    setServerError(null);
+    setSuccessMessage(null);
+    setIsSigningOut(true);
+
+    try {
+      await authClient.signOut();
+      setVerificationData(null);
+      otpForm.reset();
+      signUpForm.reset();
+      await queryClient.invalidateQueries();
+    } catch {
+      setServerError("No se pudo cerrar sesión. Intenta de nuevo en un momento.");
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
+
   const isVerifyingStep = !!verificationData;
 
   return (
@@ -219,7 +257,7 @@ export function SignUp({ initialMode = "default", prefilledEmail, prefillMessage
         })}
           >
             {({ isSubmitting: isOtpSubmitting, submissionAttempts: otpSubmissionAttempts }) => {
-              const isAnySubmitting = isSignUpSubmitting || isOtpSubmitting || isResendingOtp;
+              const isAnySubmitting = isSignUpSubmitting || isOtpSubmitting || isResendingOtp || isSigningOut;
 
             return (
               <>
@@ -431,6 +469,14 @@ export function SignUp({ initialMode = "default", prefilledEmail, prefillMessage
                           <ActivityIndicator size="small" color="#ffffff" />
                         ) : (
                           <UIText>Reenviar código</UIText>
+                        )}
+                      </Button>
+
+                      <Button onPress={handleSignOut} disabled={isAnySubmitting} variant="destructive">
+                        {isSigningOut ? (
+                          <ActivityIndicator size="small" color="#ffffff" />
+                        ) : (
+                          <UIText>Cerrar sesión</UIText>
                         )}
                       </Button>
                     </>

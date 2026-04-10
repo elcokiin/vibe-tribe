@@ -13,45 +13,65 @@ type SendEmailParams = {
   text: string;
 };
 
+type SendEmailResult =
+  | {
+      ok: true;
+    }
+  | {
+      ok: false;
+      error: string;
+      status?: number;
+      body?: string;
+    };
+
 type SendOtpParams = {
   email: string;
   otp: string;
   type: "sign-in" | "email-verification" | "forget-password" | "change-email";
 };
 
-async function sendEmailWithResend({ to, subject, html, text }: SendEmailParams) {
+async function sendEmailWithResend({ to, subject, html, text }: SendEmailParams): Promise<SendEmailResult> {
   if (env.NODE_ENV === "development") {
     console.log("[auth:email:dev] skipping Resend send", {
       to,
       subject,
       text,
     });
-    return;
+    return { ok: true };
   }
 
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${env.RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: env.RESEND_FROM_EMAIL,
-      to,
-      subject,
-      html,
-      text,
-    }),
-  });
-
-  if (!response.ok) {
-    const errorBody = await response.text();
-    console.error("Failed to send email with Resend", {
-      status: response.status,
-      body: errorBody,
-      to,
-      subject,
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: env.RESEND_FROM_EMAIL,
+        to,
+        subject,
+        html,
+        text,
+      }),
     });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      return {
+        ok: false,
+        error: "Resend API responded with non-OK status",
+        status: response.status,
+        body: errorBody,
+      };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Unknown fetch error",
+    };
   }
 }
 
@@ -76,12 +96,24 @@ async function sendOtpWithResend({ email, otp, type }: SendOtpParams) {
     </div>
   `;
 
-  void sendEmailWithResend({
+  const sendResult = await sendEmailWithResend({
     to: email,
     subject,
     text,
     html,
   });
+
+  if (!sendResult.ok) {
+    console.error("Failed to send OTP email with Resend", {
+      to: email,
+      subject,
+      from: env.RESEND_FROM_EMAIL,
+      error: sendResult.error,
+      status: sendResult.status,
+      body: sendResult.body,
+      otpType: type,
+    });
+  }
 
   if (env.NODE_ENV === "development") {
     console.log("[auth:otp:dev]", {

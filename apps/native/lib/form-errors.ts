@@ -57,6 +57,16 @@ export function mapAuthErrorMessage(error: unknown, fallbackMessage: string): st
   const normalized = rawMessage.toLowerCase();
 
   if (
+    normalized.includes("otp") ||
+    normalized.includes("verification code") ||
+    normalized.includes("verification token") ||
+    normalized.includes("invalid code") ||
+    normalized.includes("expired code")
+  ) {
+    return "Código inválido o expirado. Solicita uno nuevo e intenta de nuevo.";
+  }
+
+  if (
     normalized.includes("invalid") ||
     normalized.includes("cred") ||
     normalized.includes("password") ||
