@@ -1,0 +1,12 @@
+# Reduce memory usage at the cost of performance
+smol = true
+
+[install]
+# Hoisted uses a single shared node_modules — much better for monorepos
+linker = "hoisted"
+
+# Use frozen lockfile — skips resolution entirely, just installs from bun.lockb
+frozenLockfile = true
+
+# Skip optional dependencies (often heavy, rarely needed in CI)
+optional = false
