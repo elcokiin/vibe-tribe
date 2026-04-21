@@ -7,6 +7,7 @@ import { BrandHeader } from "@/components/brand-header";
 import { Text as UIText } from "@/components/ui/text";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
+import { ParticipantsList } from "@/components/participants-list";
 
 /**
  * T-36 & T-37: Package Details Screen (HU-21)
@@ -269,35 +270,26 @@ export default function PackageDetailsScreen() {
           </View>
         )}
 
-        {/* Participants */}
+        {/* Participants - T-43, T-44, T-45: View with Ratings */}
         {packageData.participants && packageData.participants.length > 0 && (
           <View className="mb-6">
             <UIText className="mb-3 text-base font-semibold text-gray-900">
               👥 Viajeros ({packageData.participants.length})
             </UIText>
-            {packageData.participants.map((participant: any) => (
-              <View
-                key={participant.id}
-                className="mb-3 flex-row items-center rounded-lg bg-gray-50 p-3"
-              >
-                <View className="mr-3 h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-blue-600">
-                  <UIText className="text-lg font-bold text-white">
-                    {participant.userName.charAt(0).toUpperCase()}
-                  </UIText>
-                </View>
-                <View className="flex-1">
-                  <UIText className="font-semibold text-gray-900">{participant.userName}</UIText>
-                  <UIText className="text-xs text-gray-500">
-                    Se unió: {new Date(participant.joinedAt).toLocaleDateString("es-ES")}
-                  </UIText>
-                </View>
-                {participant.userId === packageData.creatorId && (
-                  <View className="ml-2 rounded-full bg-yellow-100 px-2 py-1">
-                    <UIText className="text-xs font-bold text-yellow-700">Organizador</UIText>
-                  </View>
-                )}
-              </View>
-            ))}
+            <ParticipantsList
+              participants={packageData.participants.map((p: any) => ({
+                id: p.id,
+                userId: p.userId,
+                userName: p.userName || "Usuario Desconocido",
+                userImage: p.userImage,
+                joinedAt: new Date(p.joinedAt),
+                averageRating: p.averageRating ? parseFloat(p.averageRating.toString()) : 5.0,
+                totalRatings: p.totalRatings || 0,
+                isCreator: p.userId === packageData.creatorId,
+              }))}
+              loading={false}
+              emptyMessage="Sé el primero en unirte"
+            />
           </View>
         )}
 

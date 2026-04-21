@@ -1,6 +1,7 @@
 import { db } from "@vibetribe/db";
 import { package as packageTable, packageParticipant, packageActivity } from "@vibetribe/db/schema/package";
 import { user } from "@vibetribe/db/schema/auth";
+import { profile } from "@vibetribe/db/schema/profile";
 import { eq, and, desc, like, gte, lte } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import z from "zod";
@@ -225,6 +226,7 @@ export const packageRouter = {
 
   /**
    * READ: Get single package details with participants and activities
+   * T-43: Enhanced response with participant ratings
    */
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
@@ -246,9 +248,12 @@ export const packageRouter = {
           userName: user.name,
           userImage: user.image,
           joinedAt: packageParticipant.joinedAt,
+          averageRating: profile.averageRating,
+          totalRatings: profile.totalRatings,
         })
         .from(packageParticipant)
         .leftJoin(user, eq(packageParticipant.userId, user.id))
+        .leftJoin(profile, eq(packageParticipant.userId, profile.userId))
         .where(eq(packageParticipant.packageId, input.id));
 
       const activities = await db
@@ -270,7 +275,10 @@ export const packageRouter = {
       return {
         ...pkg[0],
         creator: creator[0],
-        participants,
+        participants: participants.map((p: typeof participants[0]) => ({
+          ...p,
+          isCreator: p.userId === pkg[0].creatorId,
+        })),
         activities,
       };
     }),

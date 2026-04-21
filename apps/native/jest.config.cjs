@@ -19,6 +19,8 @@ module.exports = {
   ],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
+    "^@vibetribe/env/native$": "<rootDir>/../../packages/env/src/native.ts",
+    "^@vibetribe/env$": "<rootDir>/../../packages/env/src/native.ts",
   },
   collectCoverageFrom: [
     "app/**/*.{ts,tsx}",
