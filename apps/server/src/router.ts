@@ -3,6 +3,7 @@ import type { RouterClient } from "@orpc/server";
 import { protectedProcedure, publicProcedure } from "./procedure.js";
 import { profileRouter } from "./routers/profile.js";
 import { todoRouter } from "./routers/todo.js";
+import { packageRouter } from "./routers/package.js";
 
 export const appRouter = {
   healthCheck: publicProcedure.handler(() => {
@@ -16,6 +17,7 @@ export const appRouter = {
   }),
   profile: profileRouter,
   todo: todoRouter,
+  package: packageRouter,
 };
 
 export type AppRouter = typeof appRouter;
