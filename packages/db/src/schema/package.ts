@@ -46,9 +46,18 @@ export const package = pgTable(
       .notNull(),
   },
   (table) => [
+    // Single column indexes
     index("package_creatorId_idx").on(table.creatorId),
     index("package_destination_idx").on(table.destination),
     index("package_startDate_idx").on(table.startDate),
+    index("package_status_idx").on(table.status),
+    index("package_durationDays_idx").on(table.durationDays),
+    
+    // Composite indexes for common search patterns
+    index("package_status_destination_idx").on(table.status, table.destination),
+    index("package_status_startDate_idx").on(table.status, table.startDate),
+    index("package_status_durationDays_idx").on(table.status, table.durationDays),
+    index("package_startDate_endDate_status_idx").on(table.startDate, table.endDate, table.status),
   ]
 );
 

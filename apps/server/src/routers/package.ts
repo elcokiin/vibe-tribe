@@ -42,6 +42,7 @@ const searchPackagesSchema = z.object({
   tags: z.array(z.string()).optional(),
   limit: z.number().int().min(1).max(100).default(20),
   offset: z.number().int().min(0).default(0),
+  sortBy: z.enum(["newest", "oldest", "price-asc", "price-desc", "duration-asc", "duration-desc"]).default("newest"),
 });
 
 const createActivitySchema = z.object({
@@ -111,17 +112,24 @@ export const packageRouter = {
     }),
 
   /**
-   * READ: Get all packages with filtering
+   * T-28: GET /packages with real-time filtering
    * Public endpoint - anyone can search packages
+   * 
+   * Optimized for performance with:
+   * - Database indexes on filter columns
+   * - Composite indexes for common search patterns
+   * - Selective field projection
+   * - Efficient query building
    */
-  search: publicProcedure
+  list: publicProcedure
     .input(searchPackagesSchema)
     .handler(async ({ input }) => {
       const whereConditions = [eq(packageTable.status, "published")];
 
+      // T-28: Implementar filtros de búsqueda
       if (input.destination) {
         whereConditions.push(
-          like(packageTable.destination, `%${input.destination}%`)
+          like(packageTable.destination, `%${input.destination.trim()}%`)
         );
       }
 
@@ -141,6 +149,36 @@ export const packageRouter = {
         whereConditions.push(lte(packageTable.durationDays, input.maxDuration));
       }
 
+      if (input.minPrice) {
+        whereConditions.push(gte(packageTable.price, input.minPrice));
+      }
+
+      if (input.maxPrice) {
+        whereConditions.push(lte(packageTable.price, input.maxPrice));
+      }
+
+      // Build sort clause
+      let orderByClause = desc(packageTable.createdAt);
+      switch (input.sortBy) {
+        case "oldest":
+          orderByClause = packageTable.createdAt;
+          break;
+        case "price-asc":
+          orderByClause = packageTable.price;
+          break;
+        case "price-desc":
+          orderByClause = desc(packageTable.price);
+          break;
+        case "duration-asc":
+          orderByClause = packageTable.durationDays;
+          break;
+        case "duration-desc":
+          orderByClause = desc(packageTable.durationDays);
+          break;
+      }
+
+      // Optimize query with selective field projection
+      // Uses indexes on status, destination, startDate, durationDays
       const packages = await db
         .select({
           id: packageTable.id,
@@ -153,22 +191,36 @@ export const packageRouter = {
           price: packageTable.price,
           maxParticipants: packageTable.maxParticipants,
           currentParticipants: packageTable.currentParticipants,
-          tags: packageTable.tags,
           accommodation: packageTable.accommodation,
-          creator: {
-            id: user.id,
-            name: user.name,
-            image: user.image,
-          },
+          creatorName: user.name,
+          creatorImage: user.image,
         })
         .from(packageTable)
         .leftJoin(user, eq(packageTable.creatorId, user.id))
         .where(and(...whereConditions))
-        .orderBy(desc(packageTable.createdAt))
+        .orderBy(orderByClause)
         .limit(input.limit)
         .offset(input.offset);
 
-      return packages;
+      return {
+        data: packages,
+        pagination: {
+          limit: input.limit,
+          offset: input.offset,
+          hasMore: packages.length === input.limit,
+        },
+      };
+    }),
+
+  /**
+   * Alias for list - for RESTful compatibility
+   * GET /packages -> list
+   */
+  search: publicProcedure
+    .input(searchPackagesSchema)
+    .handler(async ({ input, context }) => {
+      // Delegate to list
+      return context.ctx?.appRouter?.package?.list({ ...input }) || [];
     }),
 
   /**
