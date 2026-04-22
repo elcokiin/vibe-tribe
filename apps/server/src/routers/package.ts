@@ -1,5 +1,9 @@
 import { db } from "@vibetribe/db";
-import { package as packageTable, packageParticipant, packageActivity } from "@vibetribe/db/schema/package";
+import {
+  travelPackage as travelPackageTable,
+  travelPackageParticipant,
+  travelPackageActivity,
+} from "@vibetribe/db";
 import { user } from "@vibetribe/db/schema/auth";
 import { profile } from "@vibetribe/db/schema/profile";
 import { eq, and, desc, like, gte, lte } from "drizzle-orm";
@@ -20,11 +24,14 @@ const createPackageSchema = z.object({
   maxParticipants: z.number().int().min(1).max(1000),
   price: z.string().regex(/^\d+(\.\d{1,2})?$/),
   accommodation: z.string().trim().max(200).nullable().optional(),
-  accommodationDetails: z.object({
-    name: z.string().trim().max(200),
-    rating: z.number().min(0).max(5),
-    amenities: z.array(z.string()).max(20),
-  }).nullable().optional(),
+  accommodationDetails: z
+    .object({
+      name: z.string().trim().max(200),
+      rating: z.number().min(0).max(5),
+      amenities: z.array(z.string()).max(20),
+    })
+    .nullable()
+    .optional(),
   tags: z.array(z.string().trim().max(50)).max(10).default([]),
 });
 
@@ -36,14 +43,29 @@ const searchPackagesSchema = z.object({
   destination: z.string().trim().optional(),
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().optional(),
-  minPrice: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
-  maxPrice: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+  minPrice: z
+    .string()
+    .regex(/^\d+(\.\d{1,2})?$/)
+    .optional(),
+  maxPrice: z
+    .string()
+    .regex(/^\d+(\.\d{1,2})?$/)
+    .optional(),
   minDuration: z.number().int().min(1).optional(),
   maxDuration: z.number().int().optional(),
   tags: z.array(z.string()).optional(),
   limit: z.number().int().min(1).max(100).default(20),
   offset: z.number().int().min(0).default(0),
-  sortBy: z.enum(["newest", "oldest", "price-asc", "price-desc", "duration-asc", "duration-desc"]).default("newest"),
+  sortBy: z
+    .enum([
+      "newest",
+      "oldest",
+      "price-asc",
+      "price-desc",
+      "duration-asc",
+      "duration-desc",
+    ])
+    .default("newest"),
 });
 
 const createActivitySchema = z.object({
@@ -53,7 +75,11 @@ const createActivitySchema = z.object({
   location: z.string().trim().min(1).max(200),
   duration: z.string().trim().min(1).max(100),
   isIncluded: z.boolean().default(true),
-  cost: z.string().regex(/^\d+(\.\d{1,2})?$/).nullable().optional(),
+  cost: z
+    .string()
+    .regex(/^\d+(\.\d{1,2})?$/)
+    .nullable()
+    .optional(),
 });
 
 /**
@@ -75,18 +101,21 @@ export const packageRouter = {
     .input(createPackageSchema)
     .handler(async ({ context, input }) => {
       const userId = context.session.user.id;
-      
+
       // Validate dates
       if (input.startDate >= input.endDate) {
         throw new Error("End date must be after start date");
       }
 
-      const packageId = nanoid();
-      const durationDays = calculateDurationDays(input.startDate, input.endDate);
+      const travelPackageId = nanoid();
+      const durationDays = calculateDurationDays(
+        input.startDate,
+        input.endDate,
+      );
 
       // Insert package
-      await db.insert(packageTable).values({
-        id: packageId,
+      await db.insert(travelPackageTable).values({
+        id: travelPackageId,
         creatorId: userId,
         destination: input.destination,
         title: input.title,
@@ -103,19 +132,19 @@ export const packageRouter = {
       });
 
       // Add creator as first participant
-      await db.insert(packageParticipant).values({
+      await db.insert(travelPackageParticipant).values({
         id: nanoid(),
-        packageId,
+        travelPackageId,
         userId,
       });
 
-      return { success: true, id: packageId };
+      return { success: true, id: travelPackageId };
     }),
 
   /**
    * T-28: GET /packages with real-time filtering
    * Public endpoint - anyone can search packages
-   * 
+   *
    * Optimized for performance with:
    * - Database indexes on filter columns
    * - Composite indexes for common search patterns
@@ -125,56 +154,56 @@ export const packageRouter = {
   list: publicProcedure
     .input(searchPackagesSchema)
     .handler(async ({ input }) => {
-      const whereConditions = [eq(packageTable.status, "published")];
+      const whereConditions = [eq(travelPackageTable.status, "published")];
 
       // T-28: Implementar filtros de búsqueda
       if (input.destination) {
         whereConditions.push(
-          like(packageTable.destination, `%${input.destination.trim()}%`)
+          like(travelPackageTable.destination, `%${input.destination.trim()}%`),
         );
       }
 
       if (input.startDate) {
-        whereConditions.push(gte(packageTable.startDate, input.startDate));
+        whereConditions.push(gte(travelPackageTable.startDate, input.startDate));
       }
 
       if (input.endDate) {
-        whereConditions.push(lte(packageTable.endDate, input.endDate));
+        whereConditions.push(lte(travelPackageTable.endDate, input.endDate));
       }
 
       if (input.minDuration) {
-        whereConditions.push(gte(packageTable.durationDays, input.minDuration));
+        whereConditions.push(gte(travelPackageTable.durationDays, input.minDuration));
       }
 
       if (input.maxDuration) {
-        whereConditions.push(lte(packageTable.durationDays, input.maxDuration));
+        whereConditions.push(lte(travelPackageTable.durationDays, input.maxDuration));
       }
 
       if (input.minPrice) {
-        whereConditions.push(gte(packageTable.price, input.minPrice));
+        whereConditions.push(gte(travelPackageTable.price, input.minPrice));
       }
 
       if (input.maxPrice) {
-        whereConditions.push(lte(packageTable.price, input.maxPrice));
+        whereConditions.push(lte(travelPackageTable.price, input.maxPrice));
       }
 
       // Build sort clause
-      let orderByClause = desc(packageTable.createdAt);
+      let orderByClause = desc(travelPackageTable.createdAt);
       switch (input.sortBy) {
         case "oldest":
-          orderByClause = packageTable.createdAt;
+          orderByClause = travelPackageTable.createdAt;
           break;
         case "price-asc":
-          orderByClause = packageTable.price;
+          orderByClause = travelPackageTable.price;
           break;
         case "price-desc":
-          orderByClause = desc(packageTable.price);
+          orderByClause = desc(travelPackageTable.price);
           break;
         case "duration-asc":
-          orderByClause = packageTable.durationDays;
+          orderByClause = travelPackageTable.durationDays;
           break;
         case "duration-desc":
-          orderByClause = desc(packageTable.durationDays);
+          orderByClause = desc(travelPackageTable.durationDays);
           break;
       }
 
@@ -182,22 +211,22 @@ export const packageRouter = {
       // Uses indexes on status, destination, startDate, durationDays
       const packages = await db
         .select({
-          id: packageTable.id,
-          destination: packageTable.destination,
-          title: packageTable.title,
-          description: packageTable.description,
-          startDate: packageTable.startDate,
-          endDate: packageTable.endDate,
-          durationDays: packageTable.durationDays,
-          price: packageTable.price,
-          maxParticipants: packageTable.maxParticipants,
-          currentParticipants: packageTable.currentParticipants,
-          accommodation: packageTable.accommodation,
+          id: travelPackageTable.id,
+          destination: travelPackageTable.destination,
+          title: travelPackageTable.title,
+          description: travelPackageTable.description,
+          startDate: travelPackageTable.startDate,
+          endDate: travelPackageTable.endDate,
+          durationDays: travelPackageTable.durationDays,
+          price: travelPackageTable.price,
+          maxParticipants: travelPackageTable.maxParticipants,
+          currentParticipants: travelPackageTable.currentParticipants,
+          accommodation: travelPackageTable.accommodation,
           creatorName: user.name,
           creatorImage: user.image,
         })
-        .from(packageTable)
-        .leftJoin(user, eq(packageTable.creatorId, user.id))
+        .from(travelPackageTable)
+        .leftJoin(user, eq(travelPackageTable.creatorId, user.id))
         .where(and(...whereConditions))
         .orderBy(orderByClause)
         .limit(input.limit)
@@ -233,8 +262,8 @@ export const packageRouter = {
     .handler(async ({ input }) => {
       const pkg = await db
         .select()
-        .from(packageTable)
-        .where(eq(packageTable.id, input.id))
+        .from(travelPackageTable)
+        .where(eq(travelPackageTable.id, input.id))
         .limit(1);
 
       if (!pkg[0]) {
@@ -243,23 +272,23 @@ export const packageRouter = {
 
       const participants = await db
         .select({
-          id: packageParticipant.id,
-          userId: packageParticipant.userId,
+          id: travelPackageParticipant.id,
+          userId: travelPackageParticipant.userId,
           userName: user.name,
           userImage: user.image,
-          joinedAt: packageParticipant.joinedAt,
+          joinedAt: travelPackageParticipant.joinedAt,
           averageRating: profile.averageRating,
           totalRatings: profile.totalRatings,
         })
-        .from(packageParticipant)
-        .leftJoin(user, eq(packageParticipant.userId, user.id))
-        .leftJoin(profile, eq(packageParticipant.userId, profile.userId))
-        .where(eq(packageParticipant.packageId, input.id));
+        .from(travelPackageParticipant)
+        .leftJoin(user, eq(travelPackageParticipant.userId, user.id))
+        .leftJoin(profile, eq(travelPackageParticipant.userId, profile.userId))
+        .where(eq(travelPackageParticipant.travelPackageId, input.id));
 
       const activities = await db
         .select()
-        .from(packageActivity)
-        .where(eq(packageActivity.packageId, input.id));
+        .from(travelPackageActivity)
+        .where(eq(travelPackageActivity.travelPackageId, input.id));
 
       const creator = await db
         .select({
@@ -275,7 +304,7 @@ export const packageRouter = {
       return {
         ...pkg[0],
         creator: creator[0],
-        participants: participants.map((p: typeof participants[0]) => ({
+        participants: participants.map((p: (typeof participants)[0]) => ({
           ...p,
           isCreator: p.userId === pkg[0].creatorId,
         })),
@@ -291,7 +320,7 @@ export const packageRouter = {
       z.object({
         id: z.string(),
         data: updatePackageSchema,
-      })
+      }),
     )
     .handler(async ({ context, input }) => {
       const userId = context.session.user.id;
@@ -299,8 +328,8 @@ export const packageRouter = {
       // Check if package exists and user is creator
       const pkg = await db
         .select()
-        .from(packageTable)
-        .where(eq(packageTable.id, input.id))
+        .from(travelPackageTable)
+        .where(eq(travelPackageTable.id, input.id))
         .limit(1);
 
       if (!pkg[0]) {
@@ -326,15 +355,15 @@ export const packageRouter = {
           : pkg[0].durationDays;
 
       const updateData: Record<string, unknown> = { ...input.data };
-      
+
       if (input.data.startDate || input.data.endDate) {
         updateData.durationDays = durationDays;
       }
 
       await db
-        .update(packageTable)
+        .update(travelPackageTable)
         .set(updateData)
-        .where(eq(packageTable.id, input.id));
+        .where(eq(travelPackageTable.id, input.id));
 
       return { success: true };
     }),
@@ -350,8 +379,8 @@ export const packageRouter = {
       // Check if package exists and user is creator
       const pkg = await db
         .select()
-        .from(packageTable)
-        .where(eq(packageTable.id, input.id))
+        .from(travelPackageTable)
+        .where(eq(travelPackageTable.id, input.id))
         .limit(1);
 
       if (!pkg[0]) {
@@ -362,7 +391,7 @@ export const packageRouter = {
         throw new Error("Only the package creator can delete it");
       }
 
-      await db.delete(packageTable).where(eq(packageTable.id, input.id));
+      await db.delete(travelPackageTable).where(eq(travelPackageTable.id, input.id));
 
       return { success: true };
     }),
@@ -373,9 +402,9 @@ export const packageRouter = {
   addActivity: protectedProcedure
     .input(
       z.object({
-        packageId: z.string(),
+        travelPackageId: z.string(),
         activity: createActivitySchema,
-      })
+      }),
     )
     .handler(async ({ context, input }) => {
       const userId = context.session.user.id;
@@ -383,8 +412,8 @@ export const packageRouter = {
       // Check if package exists and user is creator
       const pkg = await db
         .select()
-        .from(packageTable)
-        .where(eq(packageTable.id, input.packageId))
+        .from(travelPackageTable)
+        .where(eq(travelPackageTable.id, input.travelPackageId))
         .limit(1);
 
       if (!pkg[0]) {
@@ -395,9 +424,9 @@ export const packageRouter = {
         throw new Error("Only the package creator can add activities");
       }
 
-      await db.insert(packageActivity).values({
+      await db.insert(travelPackageActivity).values({
         id: nanoid(),
-        packageId: input.packageId,
+        travelPackageId: input.travelPackageId,
         title: input.activity.title,
         description: input.activity.description,
         date: input.activity.date,
@@ -414,15 +443,15 @@ export const packageRouter = {
    * Join a package as a participant
    */
   joinPackage: protectedProcedure
-    .input(z.object({ packageId: z.string() }))
+    .input(z.object({ travelPackageId: z.string() }))
     .handler(async ({ context, input }) => {
       const userId = context.session.user.id;
 
       // Check if package exists
       const pkg = await db
         .select()
-        .from(packageTable)
-        .where(eq(packageTable.id, input.packageId))
+        .from(travelPackageTable)
+        .where(eq(travelPackageTable.id, input.travelPackageId))
         .limit(1);
 
       if (!pkg[0]) {
@@ -432,12 +461,12 @@ export const packageRouter = {
       // Check if already a participant
       const existing = await db
         .select()
-        .from(packageParticipant)
+        .from(travelPackageParticipant)
         .where(
           and(
-            eq(packageParticipant.packageId, input.packageId),
-            eq(packageParticipant.userId, userId)
-          )
+            eq(travelPackageParticipant.travelPackageId, input.travelPackageId),
+            eq(travelPackageParticipant.userId, userId),
+          ),
         )
         .limit(1);
 
@@ -451,19 +480,19 @@ export const packageRouter = {
       }
 
       // Add participant
-      await db.insert(packageParticipant).values({
+      await db.insert(travelPackageParticipant).values({
         id: nanoid(),
-        packageId: input.packageId,
+        travelPackageId: input.travelPackageId,
         userId,
       });
 
       // Increment current participants
       await db
-        .update(packageTable)
+        .update(travelPackageTable)
         .set({
           currentParticipants: pkg[0].currentParticipants + 1,
         })
-        .where(eq(packageTable.id, input.packageId));
+        .where(eq(travelPackageTable.id, input.travelPackageId));
 
       return { success: true };
     }),
@@ -472,19 +501,19 @@ export const packageRouter = {
    * Leave a package
    */
   leavePackage: protectedProcedure
-    .input(z.object({ packageId: z.string() }))
+    .input(z.object({ travelPackageId: z.string() }))
     .handler(async ({ context, input }) => {
       const userId = context.session.user.id;
 
       // Check if user is participant
       const participant = await db
         .select()
-        .from(packageParticipant)
+        .from(travelPackageParticipant)
         .where(
           and(
-            eq(packageParticipant.packageId, input.packageId),
-            eq(packageParticipant.userId, userId)
-          )
+            eq(travelPackageParticipant.travelPackageId, input.travelPackageId),
+            eq(travelPackageParticipant.userId, userId),
+          ),
         )
         .limit(1);
 
@@ -494,23 +523,23 @@ export const packageRouter = {
 
       // Remove participant
       await db
-        .delete(packageParticipant)
-        .where(eq(packageParticipant.id, participant[0].id));
+        .delete(travelPackageParticipant)
+        .where(eq(travelPackageParticipant.id, participant[0].id));
 
       // Decrement current participants
       const pkg = await db
         .select()
-        .from(packageTable)
-        .where(eq(packageTable.id, input.packageId))
+        .from(travelPackageTable)
+        .where(eq(travelPackageTable.id, input.travelPackageId))
         .limit(1);
 
       if (pkg[0]) {
         await db
-          .update(packageTable)
+          .update(travelPackageTable)
           .set({
             currentParticipants: Math.max(1, pkg[0].currentParticipants - 1),
           })
-          .where(eq(packageTable.id, input.packageId));
+          .where(eq(travelPackageTable.id, input.travelPackageId));
       }
 
       return { success: true };

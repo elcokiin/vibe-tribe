@@ -6,7 +6,7 @@ smol = true
 linker = "hoisted"
 
 # Use frozen lockfile — skips resolution entirely, just installs from bun.lockb
-frozenLockfile = true
+frozenLockfile = false
 
 # Keep optional dependencies enabled; some build-time native packages
 # (for example lightningcss used by uniwind/tailwind) are distributed this way.
