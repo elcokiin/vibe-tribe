@@ -188,7 +188,7 @@ export const packageRouter = {
       }
 
       // Build sort clause
-      let orderByClause = desc(travelPackageTable.createdAt);
+      let orderByClause: any = desc(travelPackageTable.createdAt);
       switch (input.sortBy) {
         case "oldest":
           orderByClause = travelPackageTable.createdAt;
@@ -248,9 +248,30 @@ export const packageRouter = {
    */
   search: publicProcedure
     .input(searchPackagesSchema)
-    .handler(async ({ input, context }) => {
-      // Delegate to list
-      return context.ctx?.appRouter?.package?.list({ ...input }) || [];
+    .handler(async ({ input }) => {
+      // Create empty conditions for direct DB query fallback (since ctx.appRouter doesn't exist)
+      const whereConditions = [eq(travelPackageTable.status, "published")];
+
+      if (input.destination) {
+        whereConditions.push(
+          like(travelPackageTable.destination, `%${input.destination.trim()}%`),
+        );
+      }
+
+      let orderByClause: any = desc(travelPackageTable.createdAt);
+      
+      const packages = await db
+        .select()
+        .from(travelPackageTable)
+        .where(and(...whereConditions))
+        .orderBy(orderByClause)
+        .limit(input.limit)
+        .offset(input.offset);
+        
+      return {
+        data: packages,
+        pagination: { limit: input.limit, offset: input.offset, hasMore: packages.length === input.limit },
+      };
     }),
 
   /**
@@ -298,7 +319,7 @@ export const packageRouter = {
           image: user.image,
         })
         .from(user)
-        .where(eq(user.id, pkg[0].creatorId))
+        .where(eq(user.id, pkg[0].creatorId!))
         .limit(1);
 
       return {
@@ -306,7 +327,7 @@ export const packageRouter = {
         creator: creator[0],
         participants: participants.map((p: (typeof participants)[0]) => ({
           ...p,
-          isCreator: p.userId === pkg[0].creatorId,
+          isCreator: p.userId === pkg[0]?.creatorId,
         })),
         activities,
       };

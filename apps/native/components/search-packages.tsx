@@ -2,12 +2,16 @@ import { useDeferredValue, useState } from "react";
 import React from "react";
 import { FlatList, TextInput, View, ActivityIndicator, RefreshControl } from "react-native";
 import z from "zod";
+import { Package, AlertCircle, MapPin } from "lucide-react-native";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Text as UIText } from "@/components/ui/text";
 import { orpc } from "@/utils/orpc";
+import { useRouter } from "expo-router";
+
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 /**
  * T-33 & T-34: Search filters with real-time updates
@@ -41,6 +45,7 @@ type SearchPackagesComponentProps = {
 };
 
 export function SearchPackages({ onPackageSelect }: SearchPackagesComponentProps) {
+  const router = useRouter();
   const [filters, setFilters] = useState<SearchFilters>({
     destination: "",
     startDate: "",
@@ -62,19 +67,19 @@ export function SearchPackages({ onPackageSelect }: SearchPackagesComponentProps
    * T-34: Real-time search with React Query
    * Updates results immediately when filters change
    */
-  const { data, isLoading, isError, error, refetch, isFetchingNextPage } = orpc.package.list.useInfiniteQuery(
-    {
-      destination: debouncedFilters.destination || undefined,
-      startDate: debouncedFilters.startDate ? new Date(debouncedFilters.startDate) : undefined,
-      endDate: debouncedFilters.endDate ? new Date(debouncedFilters.endDate) : undefined,
-      minDuration: debouncedFilters.minDuration ? parseInt(debouncedFilters.minDuration, 10) : undefined,
-      maxDuration: debouncedFilters.maxDuration ? parseInt(debouncedFilters.maxDuration, 10) : undefined,
-      minPrice: debouncedFilters.minPrice || undefined,
-      maxPrice: debouncedFilters.maxPrice || undefined,
-      limit: 20,
-      offset,
-    },
-    {
+  const { data, isLoading, isError, error, refetch, isFetchingNextPage } = useInfiniteQuery(
+    orpc.package.list.infiniteOptions({
+      input: (pageParam) => ({
+        destination: debouncedFilters.destination || undefined,
+        startDate: debouncedFilters.startDate ? new Date(debouncedFilters.startDate) : undefined,
+        endDate: debouncedFilters.endDate ? new Date(debouncedFilters.endDate) : undefined,
+        minDuration: debouncedFilters.minDuration ? parseInt(debouncedFilters.minDuration, 10) : undefined,
+        maxDuration: debouncedFilters.maxDuration ? parseInt(debouncedFilters.maxDuration, 10) : undefined,
+        minPrice: debouncedFilters.minPrice || undefined,
+        maxPrice: debouncedFilters.maxPrice || undefined,
+        limit: 20,
+        offset: pageParam.offset,
+      }),
       getNextPageParam: (lastPage) => {
         if (lastPage.pagination?.hasMore) {
           return {
@@ -84,7 +89,7 @@ export function SearchPackages({ onPackageSelect }: SearchPackagesComponentProps
         return null;
       },
       initialPageParam: { offset: 0 },
-    }
+    })
   );
 
   // Reset offset when filters change
@@ -208,20 +213,47 @@ export function SearchPackages({ onPackageSelect }: SearchPackagesComponentProps
 
       {/* Results */}
       {isError && (
-        <View className="flex-1 items-center justify-center px-4">
-          <UIText className="mb-4 text-center text-red-600">
-            {error instanceof Error ? error.message : "Error al buscar paquetes"}
+        <View className="flex-1 items-center justify-center px-6">
+          <View className="mb-4 rounded-full bg-orange-100 p-4">
+            <AlertCircle size={48} color="#f97316" strokeWidth={1.5} />
+          </View>
+          <UIText className="mb-2 text-center text-lg font-bold text-gray-900">
+            No pudimos cargar los paquetes
           </UIText>
-          <Button onPress={() => refetch()}>
-            <UIText className="text-white font-semibold">Reintentar</UIText>
+          <UIText className="mb-6 text-center text-sm text-gray-600">
+            {error instanceof Error ? error.message : "Ocurrió un error al buscar"}
+          </UIText>
+          <Button onPress={() => refetch()} className="bg-blue-600">
+            <UIText className="text-white font-semibold">Intentar de nuevo</UIText>
           </Button>
         </View>
       )}
 
       {allPackages.length === 0 && !isLoading && !isError && (
-        <View className="flex-1 items-center justify-center px-4">
-          <UIText className="text-gray-500">No se encontraron paquetes</UIText>
-          <UIText className="mt-2 text-xs text-gray-400">Intenta con otros filtros</UIText>
+        <View className="flex-1 items-center justify-center px-6">
+          <View className="mb-4 rounded-full bg-blue-100 p-4">
+            <Package size={48} color="#3b82f6" strokeWidth={1.5} />
+          </View>
+          <UIText className="mb-2 text-center text-lg font-bold text-gray-900">
+            Aun no hay paquetes
+          </UIText>
+          <UIText className="mb-6 text-center text-sm text-gray-600">
+            Sé el primero en crear un viaje memorable para otros viajeros
+          </UIText>
+          <View className="w-full gap-3">
+            <Button 
+              onPress={() => router.push("/packages/create")} 
+              className="bg-blue-600"
+            >
+              <UIText className="text-white font-semibold">Crear Paquete</UIText>
+            </Button>
+            <Button 
+              onPress={() => refetch()} 
+              className="bg-gray-200"
+            >
+              <UIText className="text-gray-800 font-semibold">Actualizar</UIText>
+            </Button>
+          </View>
         </View>
       )}
 

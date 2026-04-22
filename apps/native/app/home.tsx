@@ -43,6 +43,26 @@ export default function HomeScreen() {
               <View className="flex-row items-center justify-between">
                 <View className="flex-row items-center gap-2">
                   <Icon as={Server} className="text-primary" />
+                  <CardTitle>Sprint 2 Features</CardTitle>
+                </View>
+              </View>
+              <CardDescription>Opciones añadidas para el manejo de paquetes.</CardDescription>
+            </CardHeader>
+            <CardContent className="gap-4">
+              <Button variant="default" onPress={() => router.push("/packages/search" as never)}>
+                <Text>Buscar Paquetes</Text>
+              </Button>
+              <Button variant="default" onPress={() => router.push("/packages/create" as never)}>
+                <Text>Crear Paquete</Text>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/60 bg-card/95">
+            <CardHeader>
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-2">
+                  <Icon as={Server} className="text-primary" />
                   <CardTitle>Health Check</CardTitle>
                 </View>
                 <Badge variant={isConnected ? "default" : "destructive"}>
